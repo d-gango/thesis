@@ -2,8 +2,8 @@ clear all;
 % parameters
 global m b k mu g finish
 m = [1, 1];
-b = [1, 0];
-k = [1, 0];
+b = [1, 1];
+k = [1, 1];
 mu = 0.5;
 g = 1;
 
