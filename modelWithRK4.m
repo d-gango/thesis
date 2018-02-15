@@ -3,23 +3,29 @@ close all;
 
 % parameters
 global m b k mu g n
-n = 2; % number of masses
+n = 10; % number of masses
 m = ones(1, n) * 1;
-b = ones(1, n) * 1;
-%b(end) = 0;
+b = ones(1, n) * 10;
+b(end) = 0;
 k = ones(1, n) * 1;
-%k(end) = 0;
+k(end) = 0;
 mu = 0.5;
 g = 1;
 
 t = 0;
 dt = 0.001;
-finish = 20;
+finish = 15;
 
 x0 = zeros(1, 2*n);
+% calculate external and friction forces
+fh = fhat(x0,t);
+[fr, slip] = friction(x0, fh);
 
 tout = t;
 xout = x0;
+fhout = fh;
+frout = fr;
+slipout = slip;
 
 while t < finish
     % integrate 1 timestep
@@ -28,10 +34,17 @@ while t < finish
     % set the new ICs
     x0 = x;
     t = t + dt;
+    
+    % calculate external and friction forces
+    fh = fhat(x0,t);
+    [fr, slip] = friction(x0, fh);
 
    % write output
    tout = [tout; t];
    xout = [xout; x];
+   fhout = [fhout; fh];
+   frout = [frout; fr];
+   slipout = [slipout; slip];
 end
 
 massnumbers = int2str((1:n)'); % for the labels
@@ -55,10 +68,10 @@ plot(xout(:,1:n), xout(:,n+1:2*n));
 legend(massnumbers);
 title('phase portraits')
 
-% figure
-% plot(tout, frout)
-% legend(massnumbers);
-% title('friction forces')
+figure
+plot(tout, frout)
+legend(massnumbers);
+title('friction forces')
 % --------------------------------------------------------------------------
 
 function xdot = eqOfMotion(x,t)
@@ -100,7 +113,7 @@ function [fr, slip] = friction(x, fh)
     slip = ones(1,n) * -1;
     fr = zeros(1,n);
     for i = 1:n
-        if abs(x(n+i)) < 1e-10  % zero velocity
+        if abs(x(n+i)) < 1e-3  % zero velocity
             if abs(fh(i)) > mu*m(i)*g
                 slip(i) = 1;
                 fr(i) = mu*m(i)*g*sign(fh(i));
@@ -119,5 +132,5 @@ end
 % --------------------------------------------------------------------------
 
 function f = forceIn(t)
-    f = 2*sin(t);
+    f = t;
 end
