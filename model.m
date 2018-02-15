@@ -3,7 +3,7 @@ close all;
 
 % parameters
 global m b k mu g finish n
-n = 5; % number of masses
+n = 2; % number of masses
 m = ones(1, n) * 1;
 b = ones(1, n) * 1;
 b(end) = 0;
@@ -13,7 +13,7 @@ mu = 0.5;
 g = 1;
 
 start = 0;
-finish = 10;
+finish = 20;
 dt = 0.001;
 x0 = zeros(2*n, 1);
 options = odeset('Events',@events);
@@ -34,7 +34,7 @@ while tout(end) < finish
             fh = fhat(xout(end,:),tout(end));
             if abs(fh(i)) > mu*m(i)*g
                 slip(i) = 1;
-                fr(i) = mu*m(i)*g*sign(fh(1));
+                fr(i) = mu*m(i)*g*sign(fh(i));
             else
                 slip(i) = 0;
                 fr(i) = fh(i);
@@ -143,7 +143,7 @@ function fh = fhat(x, t)
     fh(1) = forceIn(t) - k(1)*(x(1)-x(2)) - b(1)*(x(n+1)-x(n+2));
     if n>2
         for j = 2:n-1
-            fh(j) = k(j-1)*(x(j-1)-x(j)) + b(j-1)*(x(n+j+1)-x(n+j))...
+            fh(j) = k(j-1)*(x(j-1)-x(j)) + b(j-1)*(x(n+j-1)-x(n+j))...
                    -k(j)*(x(j)-x(j+1)) - b(j)*(x(n+j)-x(n+j+1));
         end
     end
@@ -154,7 +154,7 @@ end
 % --------------------------------------------------------------------------
 
 function f = forceIn(t)
-    f = t;
+    f = 2*sin(t);
 end
 
 % --------------------------------------------------------------------------

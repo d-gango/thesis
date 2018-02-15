@@ -8,7 +8,7 @@ mu = 0.5;
 g = 1;
 
 start = 0;
-finish = 2;
+finish = 20;
 dt = 0.001;
 x0 = [0; 0; 0; 0];
 options = odeset('Events',@events);
@@ -29,7 +29,7 @@ while tout(end) < finish
             fh = fhat(xout(end,:),tout(end));
             if abs(fh(i)) > mu*m(i)*g
                 slip(i) = 1;
-                fr(i) = mu*m(i)*g*sign(fh(1));
+                fr(i) = mu*m(i)*g*sign(fh(i));
             else
                 slip(i) = 0;
                 fr(i) = fh(i);
@@ -137,7 +137,7 @@ end
 % --------------------------------------------------------------------------
 
 function f = forceIn(t)
-    f = t;
+    f = 2*sin(t);
 end
 
 % --------------------------------------------------------------------------
