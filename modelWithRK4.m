@@ -3,9 +3,9 @@ close all;
 
 % parameters
 global m b k mu g n
-n = 10; % number of masses
+n = 5; % number of masses
 m = ones(1, n) * 1;
-b = ones(1, n) * 10;
+b = ones(1, n) * 20;
 b(end) = 0;
 k = ones(1, n) * 1;
 k(end) = 0;
@@ -14,7 +14,7 @@ g = 1;
 
 t = 0;
 dt = 0.001;
-finish = 15;
+finish = 5;
 
 x0 = zeros(1, 2*n);
 % calculate external and friction forces
@@ -72,6 +72,8 @@ figure
 plot(tout, frout)
 legend(massnumbers);
 title('friction forces')
+
+animation(xout, tout, slipout);
 % --------------------------------------------------------------------------
 
 function xdot = eqOfMotion(x,t)
