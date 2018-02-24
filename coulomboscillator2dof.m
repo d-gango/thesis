@@ -34,7 +34,7 @@ while tout(end) < finish
                 slip(i) = 0;
                 fr(i) = fh(i);
             end
-
+            
         else
             slip(i) = 1;
             fr(i) = mu*m(i)*g*sign(xout(end,i+2));
@@ -42,9 +42,9 @@ while tout(end) < finish
     end
     
     if all(slip)
-   % solve until v=0
-       [t,x,te,xe,ie] = ode45(@(t,x) eqOfMotion(x,t,fr),[start finish],...
-                        x0, options);
+        % solve until v=0
+        [t,x,te,xe,ie] = ode45(@(t,x) eqOfMotion(x,t,fr),[start finish],...
+            x0, options);
     else
         slipping = find(slip);
         stuck = find(~slip);
@@ -59,46 +59,46 @@ while tout(end) < finish
         else
             % solve the ode because of the slipping, but only for 1 step
             [t,x,te,xe,ie] = ode45(@(t,x) eqOfMotion(x,t,fr),[start start+dt],...
-                        x0, options);
-                    
+                x0, options);
+            
             t = [tout(end); tout(end)+dt];
             x = [xout(end,:); x(end,:)];
             x(end,stuck) = xout(end, stuck);
             x(end,stuck+2) = xout(end, stuck+2);
-%             if ~isempty(te)
-%                 error('Another mass got stuck while solving the ode')
-%             end
+            %             if ~isempty(te)
+            %                 error('Another mass got stuck while solving the ode')
+            %             end
             te = [];
             xe = [];
             ie = [];
         end
     end
-
-   % write output
-   tout = [tout; t(2:end)];
-   xout = [xout; x(2:end,:)];
-   teout = [teout; te];
-   xeout = [xeout; xe];
-   ieout = [ieout; ie];
-   if isempty(frout)
-       frout = ones(size(t)) * fr;
-   else
-       frout = [frout; ones(size(t(2:end)))*fr];
-   end
-   
-   
-   % set the new ICs
-   x0 = x(end,:)';
-   
-   start = t(end);
+    
+    % write output
+    tout = [tout; t(2:end)];
+    xout = [xout; x(2:end,:)];
+    teout = [teout; te];
+    xeout = [xeout; xe];
+    ieout = [ieout; ie];
+    if isempty(frout)
+        frout = ones(size(t)) * fr;
+    else
+        frout = [frout; ones(size(t(2:end)))*fr];
+    end
+    
+    
+    % set the new ICs
+    x0 = x(end,:)';
+    
+    start = t(end);
 end
 
 plot(tout, xout(:,1),'b', tout, xout(:,2),'r',...
-     tout, xout(:,3),':b', tout, xout(:,4),':r');
+    tout, xout(:,3),':b', tout, xout(:,4),':r');
 xlim([0, finish]);
 %ylim([-2, 2]);
 % hold on;
-% % plot events 
+% % plot events
 % if ~isempty(teout)
 %     plot(teout,xeout(:,1),'ko')
 % end
@@ -129,15 +129,15 @@ end
 % --------------------------------------------------------------------------
 
 function fh = fhat(x, t)
-    global b k
-    fh = [forceIn(t) - k(1)*(x(1)-x(2)) - b(1)*(x(3)-x(4));...
-         k(1)*(x(1)-x(2)) + b(1)*(x(3)-x(4)) - k(2)*x(2) - b(2)*x(4)];
+global b k
+fh = [forceIn(t) - k(1)*(x(1)-x(2)) - b(1)*(x(3)-x(4));...
+    k(1)*(x(1)-x(2)) + b(1)*(x(3)-x(4)) - k(2)*x(2) - b(2)*x(4)];
 end
 
 % --------------------------------------------------------------------------
 
 function f = forceIn(t)
-    f = 2*sin(t);
+f = 2*sin(t);
 end
 
 % --------------------------------------------------------------------------

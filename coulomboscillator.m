@@ -38,13 +38,13 @@ while tout(end) < finish
     end
     
     if slip
-   % solve until v=0
-       [t,x,te,xe,ie] = ode45(@(t,x) eqOfMotion(x,t,fr),[start finish],...
-                        x0, options);
-%        % A good guess of a valid first timestep is the length of the last valid
-%        % timestep, so use it for faster computation.  'refine' is 4 by default.
-%        options = odeset(options,'InitialStep',t(end)-t(end-refine),...
-%       'MaxStep',t(end)-t(1));
+        % solve until v=0
+        [t,x,te,xe,ie] = ode45(@(t,x) eqOfMotion(x,t,fr),[start finish],...
+            x0, options);
+        %        % A good guess of a valid first timestep is the length of the last valid
+        %        % timestep, so use it for faster computation.  'refine' is 4 by default.
+        %        options = odeset(options,'InitialStep',t(end)-t(end-refine),...
+        %       'MaxStep',t(end)-t(1));
     else
         t = [tout(end); tout(end)+dt];
         x = [xout(end,:); xout(end,:)];
@@ -53,32 +53,32 @@ while tout(end) < finish
         xe = [];
         ie = [];
     end
-
-   % write output
-   tout = [tout; t(2:end)];
-   xout = [xout; x(2:end,:)];
-   teout = [teout; te];
-   xeout = [xeout; xe];
-   ieout = [ieout; ie];
-   if isempty(frout)
-       frout = ones(size(t)) * fr;
-   else
-       frout = [frout; ones(size(t(2:end)))*fr];
-   end
-   
-   
-   % set the new ICs
-   x0(1) = x(end,1);
-   x0(2) = x(end,2);
-   
-   start = t(end);
+    
+    % write output
+    tout = [tout; t(2:end)];
+    xout = [xout; x(2:end,:)];
+    teout = [teout; te];
+    xeout = [xeout; xe];
+    ieout = [ieout; ie];
+    if isempty(frout)
+        frout = ones(size(t)) * fr;
+    else
+        frout = [frout; ones(size(t(2:end)))*fr];
+    end
+    
+    
+    % set the new ICs
+    x0(1) = x(end,1);
+    x0(2) = x(end,2);
+    
+    start = t(end);
 end
 
 plot(tout, xout(:,1),'b', tout, xout(:,2),'r');
 xlim([0, finish]);
 %ylim([-2, 2]);
 hold on;
-% plot events 
+% plot events
 if ~isempty(teout)
     plot(teout,xeout(:,1),'ko')
 end
@@ -105,14 +105,14 @@ end
 % --------------------------------------------------------------------------
 
 function fh = fhat(x, t)
-    global b k
-    fh = forceIn(t) - b*x(2) - k*x(1);
+global b k
+fh = forceIn(t) - b*x(2) - k*x(1);
 end
 
 % --------------------------------------------------------------------------
 
 function f = forceIn(t)
-    f = sin(1.2*t); %300*sin(8*pi*t);
+f = sin(1.2*t); %300*sin(8*pi*t);
 end
 
 % --------------------------------------------------------------------------
