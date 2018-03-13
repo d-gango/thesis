@@ -1,13 +1,13 @@
 clear all
 
 global n D d L kt h phi_r contacts
-n = 10;
-contacts = [5,6]; % list of segments with assumed contact
+n = 20;
+contacts = [10 11]; % list of segments with assumed contact
 D = 40; % diameter
-d = 0.2; % contact depth
+d = 2; % contact depth
 L = D*sin(pi/(2*n)); % segment length
-kt = 1; % spring stiffness
-h = 1; % lenght of contact segment
+kt = 100; % spring stiffness
+h = 0.3; % lenght of contact segment
 % angles at relaxed state
 ang = pi/n;
 phi_r = ones(1,n+1)*ang;
@@ -28,6 +28,21 @@ x = fsolve(@equations, x0, options);
 
 sol = equations(x);
 drawsensor(x);
+
+% sort out the soultuons
+phisol = zeros(1,n+1);
+Tasol = zeros(1,n+1);
+Nasol = zeros(1,n+1);
+for i = 1:n+1
+    index = (i-1)*3;
+    phisol(i) = x(index+1);
+    Tasol(i) = x(index+2);
+    Nasol(i) = x(index+3);
+end
+Fysol = [];
+if ~isempty(contacts)
+    Fysol = x(3*(n+1)+1:end);
+end
 
 function eq = equations(x)
 global n D d L kt h phi_r contacts
@@ -67,8 +82,8 @@ for i = 1:n
         % the global gorizontal component Fx = f(Fy)
         Fx = 0;
         % conversion to local coordinates
-        Cx = Fx*cos(pi/2 - psi(i)) - Fy*sin(pi - psi(i));
-        Cy = Fx*sin(pi/2 - psi(i)) + Fy*cos(pi - psi(i));
+        Cx = Fx*cos(psi(i)- pi/2) - Fy*sin(psi(i) -pi/2);
+        Cy = Fx*sin(psi(i) -pi/2) + Fy*cos(psi(i) -pi/2);
         
         % equations with contact point
         eqx = Ta + Tb + Cx;
