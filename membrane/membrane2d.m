@@ -2,9 +2,9 @@ clear all
 
 global n D d L kt h phi_r contacts
 n = 20;
-contacts = [10 11]; % list of segments with assumed contact
+contacts = [8 13]; % list of segments with assumed contact
 D = 40; % diameter
-d = 2; % contact depth
+d = 5; % contact depth
 L = D*sin(pi/(2*n)); % segment length
 kt = 100; % spring stiffness
 h = 0.3; % lenght of contact segment
@@ -24,9 +24,8 @@ end
 % %----------------------------------------
 options = optimoptions('fsolve','MaxFunctionEvaluations',80000,...
                         'MaxIterations', 5000);
-x = fsolve(@equations, x0, options);
+[x, fval, exitflag] = fsolve(@equations, x0, options);
 
-sol = equations(x);
 drawsensor(x);
 
 % sort out the soultuons
