@@ -1,3 +1,4 @@
+%% NOT DONE YET
 function [cpoints, cforce] = membrane2dfun(cdepth, resolution)
 global n D d L kt h phi_r contacts
 n = resolution;
