@@ -1,4 +1,4 @@
-function eq = equations(x)
+function eq = equations_push(x)
 global n D d L kt h phi_r contacts
 eq = [];
 % relative angles
