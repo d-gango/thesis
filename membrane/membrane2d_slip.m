@@ -4,7 +4,7 @@ global n D d L kt h phi_r contacts mu
 n = 20;
 mu = 0.5;
 D = 40; % diameter
-d = 2; % contact depth
+d = 3; % contact depth
 L = D*sin(pi/(2*n)); % segment length
 kt = 100; % spring stiffness
 h = 0.3; % lenght of contact segment
@@ -16,7 +16,7 @@ phi_r(end) = ang/2;
 
 % load stored results
 load d_F_20.mat
-index = find([solutions.d] == d);
+index = find(round([solutions.d],2) == d);
 contacts = solutions(index).contacts;
 % use push down solution as initial condition
 x0_init = solutions(index).sol;
