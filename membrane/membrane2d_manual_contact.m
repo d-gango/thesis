@@ -1,8 +1,8 @@
 clear all
 
 global n D d L kt h phi_r contacts
-n = 50;
-contacts = [16 17 34 35]; % list of segments with assumed contact
+n = 20;
+contacts = [8 13]; % list of segments with assumed contact
 D = 40; % diameter
 d = 5; % contact depth
 L = D*sin(pi/(2*n)); % segment length
