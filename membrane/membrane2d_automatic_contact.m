@@ -3,7 +3,7 @@ clear all
 global n D d L kt h phi_r contacts
 n = 50;
 D = 40; % diameter
-d = 5; % contact depth
+d = -0.2; % contact depth
 L = D*sin(pi/(2*n)); % segment length
 kt = 100; % spring stiffness
 h = 0.3; % lenght of contact segment
