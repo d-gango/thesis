@@ -56,7 +56,7 @@ end
 xlim([-10, D+10]);
 ylim([-D/2-5, 5]);
 axis equal
-grid on
+%grid on
 
 
 end

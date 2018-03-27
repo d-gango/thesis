@@ -3,7 +3,7 @@ clear all
 global n D d L kt h phi_r contacts
 n = 50;
 D = 40; % diameter
-d = 6.5; % contact depth
+d = 5; % contact depth
 L = D*sin(pi/(2*n)); % segment length
 kt = 100; % spring stiffness
 h = 0.3; % lenght of contact segment
@@ -28,7 +28,7 @@ options = optimoptions('fsolve','MaxFunctionEvaluations',80000,...
 
 
 drawsensor(x);
-title('apprixomate solution');
+title('Approximate solution');
 
 % figuring out the contact points =========================================
 % approximate phi angles
@@ -39,7 +39,7 @@ psi_a = getPsi(phi_a);
 Yc_a = getYc(psi_a);
 % guess the contact points
 ma = max(Yc_a);
-contact_bw = 0.5;
+contact_bw = 0.15;
 mi = ma - contact_bw;
 % first guess
 contact_guess = find(Yc_a <= ma & Yc_a >= mi);

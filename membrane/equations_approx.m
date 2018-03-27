@@ -1,7 +1,6 @@
 function eq = equations_approx(x)
 global n D d L kt h phi_r
-F0 = 1;
-eps = 3;
+eps = 0.5;
 eq = [];
 % relative angles
 phivector = x(1:3:3*n+1);
@@ -38,7 +37,7 @@ for i = 1:n
     % distance from contact surface
     delta = (D/2-d)-Yc;
     % give an approximation for the contact force
-    Fy = 0.5*exp(-delta/0.5);
+    Fy = eps*exp(-delta/eps);
     % the global gorizontal component Fx = f(Fy)
     Fx = 0;
     % conversion to local coordinates
