@@ -1,6 +1,6 @@
 clear all
 
-depth = 0.1:0.1:6;
+depth = -0.3:0.1:6;
 F = [];
 successful = [];
 
@@ -44,7 +44,7 @@ for cdepth = depth
     Yc_a = getYc(psi_a);
     % guess the contact points
     ma = max(Yc_a);
-    contact_bw = 0.2;
+    contact_bw = 0.15;
     mi = ma - contact_bw;
     % first guess
     contact_guess = find(Yc_a <= ma & Yc_a >= mi);
