@@ -8,6 +8,9 @@ Tavector = x(2*(n+1)+1:3*(n+1));
 Navector = x(3*(n+1)+1:4*(n+1));
 % global orientations
 psi = zeros(1,n);
+for j = 1:n
+    psi(j) = sum(phivector(1:j));
+end
 
 % phi' = phidot
 for i = 1:n+1
@@ -35,10 +38,6 @@ for i = 1:n
     Mb = (phi_next-relax_next)*kt + phidot_next*b;
     % force transformation
     Nb = -(Ta_next*sin(phi_next) + Na_next*cos(phi_next));
-    
-    for j = 1:n
-        psi(j) = sum(phivector(1:j));
-    end
     
     if ismember(i, contacts)
         [one, ci] = ismember(i, contacts);
