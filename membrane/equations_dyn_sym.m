@@ -98,3 +98,12 @@ for k = contacts
     % save constraint
     eqns = [eqns, eqcont];
 end
+
+% add angular velocities to the variables
+% add the corresponding equations
+[eqns, vars, R] = reduceDifferentialOrder(eqns, vars);
+%Reduce the differential index of the DAEs described by eqns and vars
+[DAEs,DAEvars] = reduceDAEIndex(eqns,vars);
+%Often, reduceDAEIndex introduces redundant equations and variables
+%that can be eliminated. Eliminate redundant equations and variables
+[DAEs,DAEvars] = reduceRedundancies(DAEs,DAEvars);
