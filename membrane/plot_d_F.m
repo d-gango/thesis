@@ -1,5 +1,5 @@
 F = cell2mat({solutions.F});
-depth = cell2mat({solutions.d});
+depth = cell2mat({solutions.d})+0.3;
 success = cell2mat({solutions.success});
 
 % figure
