@@ -4,7 +4,7 @@ global n D d L kt h phi_r contacts mu b v theta
 n = 20;
 mu = 0.5;
 D = 40; % diameter
-d = 3; % contact depth
+d = 2; % contact depth
 L = D*sin(pi/(2*n)); % segment length
 kt = 100; % spring stiffness
 b = 10; % damping
@@ -25,7 +25,7 @@ contacts = solutions(index).contacts;
 % use push down solution as initial condition
 x0_init = solutions(index).sol;
 drawsensor(x0_init);
-% title('initial state');
+title('initial state');
 [eqfun, DAEvars] = equations_dyn_sym();
 
 % set initial condition guess
@@ -42,9 +42,9 @@ x0_fixed(1:length(x0)) = ones(1, length(x0));
 [x0, xp0] = decic(eqfun, 0, x0est, [], xp0est, [], opt);
 
 % solve DAE
-tspan = [0 1];
+tspan = [0 2];
 [tSol,xSol] = ode15i(eqfun, tspan, x0, xp0, opt);
-
+animateSensor(tSol,xSol);
 %=========================================================================
 function x0 = rearrange(init)
 % adds 0 angular velocities to the initial conditions
