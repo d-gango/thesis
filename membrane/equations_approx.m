@@ -1,6 +1,5 @@
 function eq = equations_approx(x)
-global n D d L kt h phi_r
-eps = 0.5;
+global n D d L kt h phi_r eps
 eq = [];
 % relative angles
 phivector = x(1:3:3*n+1);

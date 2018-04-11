@@ -1,6 +1,8 @@
 F = cell2mat({solutions.F});
 depth = cell2mat({solutions.d})+0.3;
 success = cell2mat({solutions.success});
+epsilon = cell2mat({solutions.epsilon});
+appr_error = cell2mat({solutions.approximation_error});
 
 % figure
 % plot(depth,F);
@@ -17,3 +19,8 @@ plot(fitted_parab, depth, F);
 % plot(fitted_lin, 'g');
 xlabel('d [mm]');
 ylabel('F [N]');
+
+figure
+plot(depth, epsilon)
+hold on
+plot(depth, appr_error);

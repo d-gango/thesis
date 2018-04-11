@@ -41,9 +41,7 @@ end
 figure
 line([0 D], [0 0], 'Color', 'k') % sensor base
 hold on
-if d>0
 line([-10 D+10], [-D/2+d -D/2+d], 'Color', 'k') % contact surface
-end
 plot(X,-Y) % sensor
 for i = 1:n
     if ismember(i,contacts)
