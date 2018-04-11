@@ -1,5 +1,5 @@
 clear all
-filename = 'd_F_20.mat';
+filename = 'd_F_50.mat';
 load(filename);
 depth = cell2mat({solutions.d});
 % initialisation
@@ -23,65 +23,64 @@ end
 % load solution from saved data
 for d = depth
     index = find(round([solutions.d],2) == round(d,2));
-    if isempty(solutions(index).approximation_error)
-        sol = solutions(index).sol;
-        contacts = solutions(index).contacts;
-        phi_sol = getPhi(sol);
-        
-        % iterate epsilon
-        % initial interval
-        start = 0;
-        finish = 1;
-        % iterate for dec decimal values
-        for dec = 1:4
-            res = 1/(10^dec);
-            if round(start,5) == 0
-                start = start+res;
-            end
-            epsvector = start : res : finish;
-            errorvector = zeros(1,length(epsvector));
-            for i = 1:length(epsvector)
-                global eps
-                eps = epsvector(i);
-                
-                options = optimoptions('fsolve','MaxFunctionEvaluations',80000,...
-                    'MaxIterations', 5000);
-                [x, fval, exitflag] = fsolve(@equations_approx, x0, options);
-                approximations(i,:) = x;
-                if exitflag > 0
-                    disp(['d: ' num2str(d)]);
-                    disp(['epsilon: ' num2str(eps)]);
-                    disp('Solution found');
-                    
-                    phi_appr = getPhi(x);
-                    errorvector(i) = sqrt(sum((phi_appr - phi_sol).^2));
-                else
-                    errorvector(i) = inf;
-                    disp(['d: ' num2str(d)]);
-                    disp(['epsilon: ' num2str(eps)]);
-                    disp('No solution.');
-                end
-            end
-            % find minimum
-            [m,ind] = min(errorvector);
-            % save best values
-            bestepsilon = epsvector(ind);
-            bestapprox = approximations(ind,:);
-            besterror = m;
-            % generate new interval
-            start = bestepsilon-res;
-            finish = bestepsilon+res;
+    sol = solutions(index).sol;
+    contacts = solutions(index).contacts;
+    phi_sol = getPhi(sol);
+    
+    % iterate epsilon
+    % initial interval
+    start = 0;
+    finish = 2;
+    % iterate for dec decimal values
+    for dec = 1:4
+        res = 1/(10^dec);
+        if round(start,5) == 0
+            start = start+res;
         end
-        %     drawsensor(sol);
-        %     title('solution');
-        %     drawsensor(bestapprox);
-        %     title(num2str(bestepsilon));
-        % save values
-        solutions(index).epsilon = bestepsilon;
-        solutions(index).approximation = bestapprox;
-        solutions(index).approximation_error = besterror;
-        save(filename, 'solutions', 'params');
+        epsvector = start : res : finish;
+        errorvector = zeros(1,length(epsvector));
+        for i = 1:length(epsvector)
+            global eps
+            eps = epsvector(i);
+            
+            options = optimoptions('fsolve','MaxFunctionEvaluations',80000,...
+                'MaxIterations', 5000);
+            [x, fval, exitflag] = fsolve(@equations_approx, x0, options);
+            approximations(i,:) = x;
+            if exitflag > 0
+                disp(['d: ' num2str(d)]);
+                disp(['epsilon: ' num2str(eps)]);
+                disp('Solution found');
+                
+                phi_appr = getPhi(x);
+                errorvector(i) = sqrt(sum((phi_appr - phi_sol).^2));
+            else
+                errorvector(i) = inf;
+                disp(['d: ' num2str(d)]);
+                disp(['epsilon: ' num2str(eps)]);
+                disp('No solution.');
+            end
+        end
+        % find minimum
+        [m,ind] = min(errorvector);
+        % save best values
+        bestepsilon = epsvector(ind);
+        bestapprox = approximations(ind,:);
+        besterror = m;
+        % generate new interval
+        start = bestepsilon-res;
+        finish = bestepsilon+res;
     end
+    %     drawsensor(sol);
+    %     title('solution');
+    %     drawsensor(bestapprox);
+    %     title(num2str(bestepsilon));
+    % save values
+    solutions(index).epsilon = bestepsilon;
+    solutions(index).approximation = bestapprox;
+    solutions(index).approximation_error = besterror;
+    save(filename, 'solutions', 'params');
+    
 end
 %==========================================================================
 function phi = getPhi(sol)
