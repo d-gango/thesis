@@ -1,7 +1,5 @@
-clear all
-
-n = 20;
-contacts = [10 11];
+function [f, DAEvars] = equations_dyn_sym()
+global n contacts
 % unknowns
 phivector = sym('phi',[n+1 1]);
 Tavector = sym('Ta', [n+1 1]);
@@ -24,8 +22,7 @@ for  i = 1:length(contacts)
     Fyvector(i) = str2sym(Fyname);
 end
 % constant variables
-syms D d L kt h mu theta v b
-phi_r = sym('phi_r', [1 n+1]);
+global D d L kt h mu theta v b phi_r
 % save the state variables
 vars = [phivector; Tavector; Navector; Fyvector];
 
@@ -60,7 +57,7 @@ for i = 1:n
         % the unknown global vertical contact force
         Fy = Fyvector(ci);
         % the global gorizontal component Fx = f(Fy)
-        Fx = mu*Fy*tanh(100*v);
+        Fx = mu*Fy*tanh(v(t));
         % conversion to local coordinates
         Cx = Fx*cos(psi(i)- pi/2) - Fy*sin(psi(i) -pi/2);
         Cy = Fx*sin(psi(i) -pi/2) + Fy*cos(psi(i) -pi/2);
@@ -107,3 +104,6 @@ end
 %Often, reduceDAEIndex introduces redundant equations and variables
 %that can be eliminated. Eliminate redundant equations and variables
 [DAEs,DAEvars] = reduceRedundancies(DAEs,DAEvars);
+
+f = daeFunction(DAEs, DAEvars);
+end

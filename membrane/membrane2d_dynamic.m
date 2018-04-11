@@ -11,7 +11,7 @@ b = 10; % damping
 m = 0.1/n; %mass of one segment
 theta = 1/3*m*L^2; % moment of inertia
 h = 0.3; % lenght of contact segment
-v = @(t) heaviside(t);
+v = @(t) t;
 % angles at relaxed state
 ang = pi/n;
 phi_r = ones(1,n+1)*ang;
@@ -24,35 +24,36 @@ index = find(round([solutions.d],2) == d);
 contacts = solutions(index).contacts;
 % use push down solution as initial condition
 x0_init = solutions(index).sol;
-drawsensor(x0_init);
-title('initial state');
-% add the angular velocities to the initial conditions
-x0 = setInit(x0_init);
-% formulate the mass matrix
-M = massMatrix();
+% drawsensor(x0_init);
+% title('initial state');
+[eqfun, DAEvars] = equations_dyn_sym();
 
-options = odeset('Mass', M);
-tspan = [0, 0.1];
-[t,y] = ode23t(@equations_dyn,tspan,x0,options);
+% set initial condition guess
+x0 = rearrange(x0_init);
+x0est = zeros(1, length(DAEvars));
+x0est(1:length(x0)) = x0;          % x0 guess
+xp0est = zeros(1, length(DAEvars)); % x'0 guess
+% Create an option set that specifies numerical tolerances
+% for the numerical search.
+opt = odeset('RelTol', 10.0^(-7), 'AbsTol' , 10.0^(-7));
+% Find consistent initial values for the variables and their derivatives
+x0_fixed = zeros(1, length(DAEvars));
+x0_fixed(1:length(x0)) = ones(1, length(x0));
+[x0, xp0] = decic(eqfun, 0, x0est, [], xp0est, [], opt);
 
+% solve DAE
+tspan = [0 1];
+[tSol,xSol] = ode15i(eqfun, tspan, x0, xp0, opt);
 
 %=========================================================================
-function M = massMatrix()
-global n contacts
-cn = length(contacts);
-M = zeros(4*(n+1)+cn, 4*(n+1)+cn);
-M(1:2*n+1, 1:2*n+1) = eye(2*n+1);
-end
-%=========================================================================
-function x0 = setInit(init)
+function x0 = rearrange(init)
 % adds 0 angular velocities to the initial conditions
 global n
 phi = getPhi(init);
 Ta = getTa(init);
 Na = getNa(init);
 rest = init(3*(n+1)+1:end);
-phidot = zeros(1,n+1);
-x0 = [phi, phidot, Ta, Na, rest];
+x0 = [phi, Ta, Na, rest];
 end
 %=========================================================================
 function psi = getPsi(phi)
