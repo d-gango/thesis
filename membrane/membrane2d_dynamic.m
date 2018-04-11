@@ -8,7 +8,7 @@ d = 3; % contact depth
 L = D*sin(pi/(2*n)); % segment length
 kt = 100; % spring stiffness
 b = 10; % damping
-m = 0.1/n; %mass of one segment
+m = 100/n; %mass of one segment
 theta = 1/3*m*L^2; % moment of inertia
 h = 0.3; % lenght of contact segment
 v = @(t) t;
@@ -24,7 +24,7 @@ index = find(round([solutions.d],2) == d);
 contacts = solutions(index).contacts;
 % use push down solution as initial condition
 x0_init = solutions(index).sol;
-% drawsensor(x0_init);
+drawsensor(x0_init);
 % title('initial state');
 [eqfun, DAEvars] = equations_dyn_sym();
 
