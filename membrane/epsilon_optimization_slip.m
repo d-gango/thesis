@@ -3,12 +3,13 @@ filename = 'd_F_20.mat';
 load(filename);
 depth = cell2mat({solutions.d});
 % initialisation
-global n D d L kt h phi_r contacts
+global n D d L kt h phi_r contacts mu
 n = params.n;
 D = params.D; % diameter
 L = D*sin(pi/(2*n)); % segment length
 kt = params.kt; % spring stiffness
 h = params.h; % lenght of contact segment
+mu = params.mu;
 % angles at relaxed state
 ang = pi/n;
 phi_r = ones(1,n+1)*ang;
@@ -21,7 +22,7 @@ for i = 1:n+1
 end
 
 % load solution from saved data
-for d = depth
+for d = 3
     index = find(round([solutions.d],2) == round(d,2));
     sol = solutions(index).slip_solution;
     contacts = solutions(index).slip_contacts;
@@ -47,6 +48,8 @@ for d = depth
                 'MaxIterations', 5000);
             [x, fval, exitflag] = fsolve(@equations_slip_approx, x0, options);
             approximations(i,:) = x;
+            drawsensor(x);
+            title(num2str(eps));
             if exitflag > 0
                 disp(['d: ' num2str(d)]);
                 disp(['epsilon: ' num2str(eps)]);
@@ -76,9 +79,9 @@ for d = depth
     %     drawsensor(bestapprox);
     %     title(num2str(bestepsilon));
     % save values
-    solutions(index).slip_epsilon = bestepsilon;
-    solutions(index).slip_approximation = bestapprox;
-    solutions(index).slip_approximation_error = besterror;
+    solutions(index).epsilon = bestepsilon;
+    solutions(index).approximation = bestapprox;
+    solutions(index).approximation_error = besterror;
     save(filename, 'solutions', 'params');
     
 end

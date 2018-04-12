@@ -14,11 +14,11 @@ fitted_parab = fit(depth',F','poly2');
 fitted_lin = fit(depth',F','poly1');
 
 figure
-plot(fitted_parab, depth, F);
+plot(depth, F,'.');
 % hold on
 % plot(fitted_lin, 'g');
 xlabel('d [mm]');
-ylabel('F [N]');
+ylabel('F_p [mN]');
 
 figure
 plot(depth, epsilon)
