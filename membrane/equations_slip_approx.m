@@ -37,6 +37,9 @@ for i = 1:n
     delta = (D/2-d)-Yc;
     % give an approximation for the contact force
     Fy = eps*exp(-delta/eps);
+    if isinf(Fy)
+        Fy = eps*realmax;
+    end
     % the global horizontal component Fx = f(Fy)
     Fx = mu*Fy;
     % conversion to local coordinates
