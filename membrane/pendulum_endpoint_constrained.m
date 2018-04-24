@@ -1,5 +1,5 @@
 %% 
-clear
+clear all
 % dof
 n = 3;
 % relative angles
@@ -94,7 +94,8 @@ coef = flip(coef,2);
 M = coef(1:n,1:n);
 C = coef(:,end);
 
-% constraints
+% constraints 
+%  http://farside.ph.utexas.edu/teaching/336k/Newtonhtml/node90.html
 syms Diam
 xend = 0;
 yend = 0;
@@ -111,7 +112,7 @@ D = 40;
 m_num = 100/n;
 L_num = D*sin(pi/(2*n));
 k_num = 10000;
-b_num = 100;
+b_num = 10;
 theta_num = 1/12*m_num*L_num^2;
 
 M = subs(M, [m,L,k,b,theta], [m_num,L_num,k_num,b_num,theta_num]);
@@ -131,8 +132,9 @@ eq = fq + (Cm.')/(Cm*Cm.') * (-Cm*fq);
 f = odeFunction(eq, [phi_t;phid_t]);
 
 %% solve ODE
-init = [pi/6, pi/3, pi/3, 0, 0, 0]';
-tspan = linspace(0, 20, 400);
+phi0 = [pi/6+0.1];
+init = findIC(n,phi0);
+tspan = [0 30];%linspace(0, 30, 600);
 
 [t,Y] = ode45(f,tspan,init);
 
@@ -177,7 +179,7 @@ for i = 1:n
 end
 hold off
 axis equal
-axis([-n*L n*L -n*L n*L])
+axis([-0.5*D 1.5*D -D 0.5*D])
 ht = title(sprintf('time: %0.2f sec', t(1)));
 
 % Get figure size
@@ -221,3 +223,18 @@ end
 % 
 % % Create animated GIF
 % imwrite(mov, map, 'animation.gif', 'Delaytime', 0, 'LoopCount', inf)
+
+%% check total energy
+kin = subs(T, [m,L,k,b,theta], [m_num,L_num,k_num,b_num,theta_num]);
+pot = subs(U, [m,L,k,b,theta], [m_num,L_num,k_num,b_num,theta_num]);
+total_energy = zeros(length(t),1);
+for i = 1:length(t)
+    total_energy(i) = double(subs(kin+pot, [phi_t; phid_t], Y(i,:)'));
+end
+energy_fluctuation = max(total_energy) - min(total_energy);
+rel_energy_fluctuation = energy_fluctuation / mean(total_energy);
+disp(['Energy fluctuation: ', num2str(rel_energy_fluctuation*100), ' %'])
+
+figure
+plot(t, total_energy)
+title('Total energy')
