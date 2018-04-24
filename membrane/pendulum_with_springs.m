@@ -1,7 +1,7 @@
 %% 
 clear
 % dof
-n = 3;
+n = 4;
 % relative angles
 phi = sym('phi', [n,1]);
 phi_t = phi;
@@ -49,10 +49,10 @@ for i = 1:n
 end
 
 %potential energy
-syms g
+syms k
 U = 0;
 for i = 1:n
-    U = U + m*g*y(i);
+    U = U + 1/2*k*phi_t(i)^2;
 end
 
 % dissipative potential
@@ -90,14 +90,15 @@ C = coef(:,end);
 
 %%
 % substitute the numerical values
-m_num = 1;
-L_num = 1;
-g_num = 9.81;
-b_num = 0;
+D = 40;
+m_num = 100/n;
+L_num = D*sin(pi/(2*n));
+k_num = 10000;
+b_num = 1000;
 theta_num = 1/12*m_num*L_num^2;
 
-M = subs(M, [m,L,g,b,theta], [m_num,L_num,g_num,b_num,theta_num]);
-C = subs(C, [m,L,g,b,theta], [m_num,L_num,g_num,b_num,theta_num]);
+M = subs(M, [m,L,k,b,theta], [m_num,L_num,k_num,b_num,theta_num]);
+C = subs(C, [m,L,k,b,theta], [m_num,L_num,k_num,b_num,theta_num]);
 
 phid_t = phi;
 for i = 1:n
@@ -111,13 +112,13 @@ eq = [phid_t; acc];
 f = odeFunction(eq, [phi_t;phid_t]);
 
 %% solve ODE
-init = [pi/3, pi/4 -pi/2, 0, 0, 0]';
-tspan = linspace(0, 10, 200);
+init = [pi/3, -pi/3, 0,0, 0, 0, 0, 0]';
+tspan = linspace(0, 20, 400);
 
 [t,Y] = ode45(f,tspan,init);
 
 %% animation
-L = 1;
+L = L_num;
 % Calculating joint coordinates for animation purposes
 x = L*sin(Y(:,1));
 y = -L*cos(Y(:,1));
@@ -145,9 +146,11 @@ ylabel('angle (rad)')
 subplot(2,1,2)
 xplot = [0, x(1,1)];
 yplot = [0, y(1,1)];
-for i = 2:n
-    xplot(i,:) = [xplot(i-1,2), x(1,i)];
-    yplot(i,:) = [yplot(i-1,2), y(1,i)];
+if n > 1
+    for i = 2:n
+        xplot(i,:) = [xplot(i-1,2), x(1,i)];
+        yplot(i,:) = [yplot(i-1,2), y(1,i)];
+    end
 end
 for i = 1:n
     hh2(i) = plot(xplot(i,:), yplot(i,:), '.-', 'MarkerSize', 20, 'LineWidth', 2);
