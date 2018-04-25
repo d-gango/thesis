@@ -1,12 +1,12 @@
-%% 
-clear
+%% equation of motion
+clear all
 % dof
-n = 2;
+n = 3;
 % relative angles
 phi = sym('phi', [n,1]);
 phi_t = phi;
 for i = 1:n
-    phi_t(i) = str2sym(['phi' num2str(i) '(t)']);
+    phi_t(i) = sym(['phi' num2str(i) '(t)']);
 end
 % relative angular velocities and accelerations
 phid = sym('phid', [n,1]);
@@ -60,7 +60,7 @@ U = U + 1/2*k*(pi-sum(phi_t))^2;
 syms b
 D = 0;
 for i = 1:n
-    D = D + 1/2*b*omega(i)^2;
+    D = D + 1/2*b*phid_t(i)^2;
 end
 D = D + 1/2*b*(-sum(phid_t))^2;
 
@@ -90,13 +90,13 @@ coef = flip(coef,2);
 M = coef(1:n,1:n);
 C = coef(:,end);
 
-%%
+%% substitute constants and generate function handle
 % substitute the numerical values
 D = 40;
 m_num = 100/n;
 L_num = D*sin(pi/(2*n));
-k_num = 10000;
-b_num = 1000;
+k_num = 1000;
+b_num = 10000;
 theta_num = 1/12*m_num*L_num^2;
 
 M = subs(M, [m,L,k,b,theta], [m_num,L_num,k_num,b_num,theta_num]);
@@ -104,7 +104,7 @@ C = subs(C, [m,L,k,b,theta], [m_num,L_num,k_num,b_num,theta_num]);
 
 phid_t = phi;
 for i = 1:n
-    phid_t(i) = str2sym(['phid' num2str(i) '(t)']);
+    phid_t(i) = sym(['phid' num2str(i) '(t)']);
 end
 M = subs(M, [phi; phid], [phi_t; phid_t]);
 C = subs(C, [phi; phid], [phi_t; phid_t]);
@@ -114,10 +114,10 @@ eq = [phid_t; acc];
 f = odeFunction(eq, [phi_t;phid_t]);
 
 %% solve ODE
-init = [pi/3, -pi/3, 0, 0]';
-tspan = linspace(0, 20, 400);
-
-[t,Y] = ode45(f,tspan,init);
+init = [pi/3, -pi/3, pi/2, 0, 0, 0]';
+tspan = linspace(0, 30, 600);
+options = odeset('RelTol',1e-8,'AbsTol',1e-10);
+[t,Y] = ode45(f,tspan,init, options);
 
 %% animation
 L = L_num;
@@ -204,3 +204,19 @@ end
 % 
 % % Create animated GIF
 % imwrite(mov, map, 'animation.gif', 'Delaytime', 0, 'LoopCount', inf)
+%% check total energy
+phid_t = diff(phi_t);
+syms L
+kin = subs(T, [m,L,b,k,theta], [m_num,L_num,b_num,k_num,theta_num]);
+pot = subs(U, [m,L,b,k,theta], [m_num,L_num,b_num,k_num,theta_num]);
+total_energy = zeros(length(t),1);
+for i = 1:length(t)
+    total_energy(i) = double(subs(kin+pot, [phi_t; phid_t], Y(i,:)'));
+end
+energy_fluctuation = max(total_energy) - min(total_energy);
+rel_energy_fluctuation = energy_fluctuation / mean(total_energy);
+disp(['Energy fluctuation: ', num2str(rel_energy_fluctuation*100), ' %'])
+
+figure
+plot(t, total_energy)
+title('Total energy')

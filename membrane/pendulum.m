@@ -6,7 +6,7 @@ n = 3;
 phi = sym('phi', [n,1]);
 phi_t = phi;
 for i = 1:n
-    phi_t(i) = str2sym(['phi' num2str(i) '(t)']);
+    phi_t(i) = sym(['phi' num2str(i) '(t)']);
 end
 % relative angular velocities and accelerations
 phid = sym('phid', [n,1]);
@@ -101,7 +101,7 @@ C = subs(C, [m,L,g,b,theta], [m_num,L_num,g_num,b_num,theta_num]);
 
 phid_t = phi;
 for i = 1:n
-    phid_t(i) = str2sym(['phid' num2str(i) '(t)']);
+    phid_t(i) = sym(['phid' num2str(i) '(t)']);
 end
 M = subs(M, [phi; phid], [phi_t; phid_t]);
 C = subs(C, [phi; phid], [phi_t; phid_t]);
@@ -113,8 +113,8 @@ f = odeFunction(eq, [phi_t;phid_t]);
 %% solve ODE
 init = [pi/3, pi/4 -pi/2, 0, 0, 0]';
 tspan = linspace(0, 30, 600);
-
-[t,Y] = ode45(f,tspan,init);
+options = odeset('RelTol',1e-8,'AbsTol',1e-10);
+[t,Y] = ode45(f,tspan,init, options);
 
 %% animation
 L = 1;

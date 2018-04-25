@@ -1,12 +1,13 @@
-%% 
+%% equation of motion
+tic
 clear all
 % dof
-n = 3;
+n = 4;
 % relative angles
 phi = sym('phi', [n,1]);
 phi_t = phi;
 for i = 1:n
-    phi_t(i) = str2sym(['phi' num2str(i) '(t)']);
+    phi_t(i) = sym(['phi' num2str(i) '(t)']);
 end
 % relative angular velocities and accelerations
 phid = sym('phid', [n,1]);
@@ -64,7 +65,7 @@ U = U + k*(pi-sum(phi_t))^2;  % double spring stiffness
 syms b
 D = 0;
 for i = 1:n
-    D = D + 1/2*b*omega(i)^2;
+    D = D + 1/2*b*phid_t(i)^2;
 end
 D = D + 1/2*b*(-sum(phid_t))^2;
 
@@ -105,14 +106,14 @@ for i = 1:n
 end
 h = [xend - Diam; yend];   %h(q) = 0
 Cm = jacobian(h, [phi;phid]);
-
-%%
+toc
+%% substitute constants and generate function handle
 % substitute the numerical values
 D = 40;
 m_num = 100/n;
 L_num = D*sin(pi/(2*n));
 k_num = 10000;
-b_num = 10;
+b_num = 1000;
 theta_num = 1/12*m_num*L_num^2;
 
 M = subs(M, [m,L,k,b,theta], [m_num,L_num,k_num,b_num,theta_num]);
@@ -121,7 +122,7 @@ Cm = subs(Cm, [L, Diam], [L_num, D]);
 
 phid_t = phi;
 for i = 1:n
-    phid_t(i) = str2sym(['phid' num2str(i) '(t)']);
+    phid_t(i) = sym(['phid' num2str(i) '(t)']);
 end
 M = subs(M, [phi; phid], [phi_t; phid_t]);
 C = subs(C, [phi; phid], [phi_t; phid_t]);
@@ -130,13 +131,13 @@ acc = M \ (-C);
 fq = [phid_t; acc];
 eq = fq + (Cm.')/(Cm*Cm.') * (-Cm*fq);
 f = odeFunction(eq, [phi_t;phid_t]);
-
+toc
 %% solve ODE
-phi0 = [pi/6+0.1];
+phi0 = [pi/8+0.2, pi/4-0.1];
 init = findIC(n,phi0);
-tspan = [0 30];%linspace(0, 30, 600);
-
-[t,Y] = ode45(f,tspan,init);
+tspan = linspace(0, 10, 200);
+options = odeset('RelTol',1e-8,'AbsTol',1e-10, 'BDF', 'on');
+[t,Y] = ode45(f,tspan,init, options);
 
 %% animation
 L = L_num;
@@ -153,7 +154,8 @@ end
 ang = Y(:,1:n);
 
 % Set up first frame
-figure('Color', 'white')
+figure('Color', 'white','units','normalized','outerposition',[0 0 1 1])
+
 subplot(2,1,1)
 plot(t, ang, 'LineWidth', 2)
 colors = 'brygkmc';
@@ -181,6 +183,7 @@ hold off
 axis equal
 axis([-0.5*D 1.5*D -D 0.5*D])
 ht = title(sprintf('time: %0.2f sec', t(1)));
+
 
 % Get figure size
 pos = get(gcf, 'Position');
@@ -225,8 +228,10 @@ end
 % imwrite(mov, map, 'animation.gif', 'Delaytime', 0, 'LoopCount', inf)
 
 %% check total energy
-kin = subs(T, [m,L,k,b,theta], [m_num,L_num,k_num,b_num,theta_num]);
-pot = subs(U, [m,L,k,b,theta], [m_num,L_num,k_num,b_num,theta_num]);
+phid_t = diff(phi_t);
+syms L
+kin = subs(T, [m,L,b,k,theta], [m_num,L_num,b_num,k_num,theta_num]);
+pot = subs(U, [m,L,b,k,theta], [m_num,L_num,b_num,k_num,theta_num]);
 total_energy = zeros(length(t),1);
 for i = 1:length(t)
     total_energy(i) = double(subs(kin+pot, [phi_t; phid_t], Y(i,:)'));
