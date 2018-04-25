@@ -1,5 +1,5 @@
 %% 
-clear
+clear all
 % dof
 n = 3;
 % relative angles
@@ -112,7 +112,7 @@ f = odeFunction(eq, [phi_t;phid_t]);
 
 %% solve ODE
 init = [pi/3, pi/4 -pi/2, 0, 0, 0]';
-tspan = linspace(0, 10, 200);
+tspan = linspace(0, 30, 600);
 
 [t,Y] = ode45(f,tspan,init);
 
@@ -199,3 +199,19 @@ end
 % 
 % % Create animated GIF
 % imwrite(mov, map, 'animation.gif', 'Delaytime', 0, 'LoopCount', inf)
+%% check total energy
+phid_t = diff(phi_t);
+syms L
+kin = subs(T, [m,L,g,theta], [m_num,L_num,g_num,theta_num]);
+pot = subs(U, [m,L,g,theta], [m_num,L_num,g_num,theta_num]);
+total_energy = zeros(length(t),1);
+for i = 1:length(t)
+    total_energy(i) = double(subs(kin+pot, [phi_t; phid_t], Y(i,:)'));
+end
+energy_fluctuation = max(total_energy) - min(total_energy);
+rel_energy_fluctuation = energy_fluctuation / mean(total_energy);
+disp(['Energy fluctuation: ', num2str(rel_energy_fluctuation*100), ' %'])
+
+figure
+plot(t, total_energy)
+title('Total energy')
