@@ -93,7 +93,7 @@ for i = 1:n
 end
 coef = flip(coef,2);
 M = coef(1:n,1:n);
-C = coef(:,end);
+K = coef(:,end);
 
 % constraints 
 %  http://farside.ph.utexas.edu/teaching/336k/Newtonhtml/node90.html
@@ -105,39 +105,47 @@ for i = 1:n
     yend = yend - L*cos(sum(phi(1:i)));
 end
 h = [xend - Diam; yend];   %h(q) = 0
-Cm = jacobian(h, [phi;phid]);
+
+C = jacobian(h,phi);
+H = jacobian(C*phid, phi)*phid;
+
+% first order ODE eq of motion
+Mbar = sym('m',[2*n,2*n]);
+Mbar(1:n,n+1:2*n) = zeros(n,n);
+Mbar(n+1:2*n,1:n) = zeros(n,n);
+Mbar(1:n,1:n) = eye(n);
+Mbar(n+1:2*n,n+1:2*n) = M;
+kbar = [-phid;K];
+Q = zeros(n,1);
+Qbar = zeros(2*n,1);
+Cbar = [zeros(n,length(h)); C.'];
+
+lambda = (C*(M\(C.')))\(-H-(C*(M\(-K+Q))));
+lambda = simplify(lambda);
+
+xdot = Mbar\(-kbar + Qbar + Cbar*lambda);
 toc
 %% substitute constants and generate function handle
 % substitute the numerical values
-D = 40;
+D_num = 40;
 m_num = 100/n;
-L_num = D*sin(pi/(2*n));
+L_num = D_num*sin(pi/(2*n));
 k_num = 10000;
-b_num = 10;
+b_num = 1000;
 theta_num = 1/12*m_num*L_num^2;
 
-M = subs(M, [m,L,k,b,theta], [m_num,L_num,k_num,b_num,theta_num]);
-C = subs(C, [m,L,k,b,theta], [m_num,L_num,k_num,b_num,theta_num]);
-Cm = subs(Cm, [L, Diam], [L_num, D]);
 
-phid_t = phi;
-for i = 1:n
-    phid_t(i) = str2sym(['phid' num2str(i) '(t)']);
-end
-% M = subs(M, [phi; phid], [phi_t; phid_t]);
-% C = subs(C, [phi; phid], [phi_t; phid_t]);
-% Cm = subs(Cm, [phi; phid], [phi_t; phid_t]);
-acc = M \ (-C);
-fq = [phid_t; acc];
-eq = fq + (Cm.')/(Cm*Cm.') * (-Cm*fq);
-% linearization
-Alin = jacobian(eq,[phi; phid]);
+xdot_num = subs(xdot, [Diam,m,L,k,b,theta],...
+                  [D_num,m_num,L_num,k_num,b_num,theta_num]);
+
+% linearized system matrix
+A = jacobian(xdot_num,[phi; phid]);
 % eqiulibrium state
 phi0 = ones(n,1)*pi/n;
 phi0(1) = phi0(1)/2;
 phid0 = zeros(n,1);
 % substitute equilibrium state
-Alin = double(subs(Alin, [phi;phid], [phi0;phid0]));
+A = double(subs(A, [phi;phid], [phi0;phid0]));
 % eigenvalues
-[V,D] = eig(Alin);
-lambda = diag(D)
+[V,D] = eig(A);
+eigenvalues = diag(D)
