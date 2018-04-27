@@ -2,7 +2,7 @@
 tic
 clear all
 % dof
-n = 4;
+n = 3;
 % relative angles
 phi = sym('phi', [n,1]);
 phi_t = phi;
@@ -93,7 +93,7 @@ for i = 1:n
 end
 coef = flip(coef,2);
 M = coef(1:n,1:n);
-C = coef(:,end);
+K = coef(:,end);
 
 % constraints 
 %  http://farside.ph.utexas.edu/teaching/336k/Newtonhtml/node90.html
@@ -105,49 +105,61 @@ for i = 1:n
     yend = yend - L*cos(sum(phi(1:i)));
 end
 h = [xend - Diam; yend];   %h(q) = 0
-Cm = jacobian(h, [phi;phid]);
+
+C = jacobian(h,phi);
+H = jacobian(C*phid, phi)*phid;
+
+% first order ODE eq of motion
+Mbar = sym('m',[2*n,2*n]);
+Mbar(1:n,n+1:2*n) = zeros(n,n);
+Mbar(n+1:2*n,1:n) = zeros(n,n);
+Mbar(1:n,1:n) = eye(n);
+Mbar(n+1:2*n,n+1:2*n) = M;
+kbar = [-phid;K];
+Q = zeros(n,1);
+Qbar = zeros(2*n,1);
+Cbar = [zeros(n,length(h)); C.'];
+
+lambda = (C*(M\(C.')))\(-H-(C*(M\(-K+Q))));
+lambda = simplify(lambda);
+
+xdot = Mbar\(-kbar + Qbar + Cbar*lambda);
 toc
 %% substitute constants and generate function handle
 % substitute the numerical values
-D = 40;
+D_num = 40;
 m_num = 100/n;
-L_num = D*sin(pi/(2*n));
+L_num = D_num*sin(pi/(2*n));
 k_num = 10000;
-b_num = 1000;
+b_num = 0;
 theta_num = 1/12*m_num*L_num^2;
-
-M = subs(M, [m,L,k,b,theta], [m_num,L_num,k_num,b_num,theta_num]);
-C = subs(C, [m,L,k,b,theta], [m_num,L_num,k_num,b_num,theta_num]);
-Cm = subs(Cm, [L, Diam], [L_num, D]);
 
 phid_t = phi;
 for i = 1:n
     phid_t(i) = str2sym(['phid' num2str(i) '(t)']);
 end
-M = subs(M, [phi; phid], [phi_t; phid_t]);
-C = subs(C, [phi; phid], [phi_t; phid_t]);
-Cm = subs(Cm, [phi; phid], [phi_t; phid_t]);
-acc = M \ (-C);
-fq = [phid_t; acc];
-eq = fq + (Cm.')/(Cm*Cm.') * (-Cm*fq);
-f = odeFunction(eq, [phi_t;phid_t]);
+
+xdot = subs(xdot, [Diam,m,L,k,b,theta],...
+                  [D_num,m_num,L_num,k_num,b_num,theta_num]);
+xdot = subs(xdot, [phi;phid], [phi_t; phid_t]);
+
+f = odeFunction(xdot, [phi_t;phid_t]);
 toc
 %% solve ODE
-phi0 = [pi/8, pi/4];
+phi0 = [pi/6+0.2];
 init = findIC(n,phi0)
-tspan = linspace(0, 10, 100);
+tspan = linspace(0, 10, 200);
 options = odeset('RelTol',1e-8,'AbsTol',1e-10, 'BDF', 'on');
 [t,Y] = ode45(f,tspan,init, options);
 
 %% animation
-L = L_num;
 % Calculating joint coordinates for animation purposes
-x = L*sin(Y(:,1));
-y = -L*cos(Y(:,1));
+x = L_num*sin(Y(:,1));
+y = -L_num*cos(Y(:,1));
 if n > 1
     for i = 2:n
-        x(:,i) = x(:,i-1) + L*sin(sum(Y(:,1:i),2));
-        y(:,i) = y(:,i-1) - L*cos(sum(Y(:,1:i),2));
+        x(:,i) = x(:,i-1) + L_num*sin(sum(Y(:,1:i),2));
+        y(:,i) = y(:,i-1) - L_num*cos(sum(Y(:,1:i),2));
     end
 end
 
@@ -181,7 +193,7 @@ for i = 1:n
 end
 hold off
 axis equal
-axis([-0.5*D 1.5*D -D 0.5*D])
+axis([-0.5*D_num 1.5*D_num -D_num 0.5*D_num])
 ht = title(sprintf('time: %0.2f sec', t(1)));
 
 

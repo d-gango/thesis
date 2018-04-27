@@ -96,7 +96,7 @@ D = 40;
 m_num = 100/n;
 L_num = D*sin(pi/(2*n));
 k_num = 1000;
-b_num = 10000;
+b_num = 0;
 theta_num = 1/12*m_num*L_num^2;
 
 M = subs(M, [m,L,k,b,theta], [m_num,L_num,k_num,b_num,theta_num]);
