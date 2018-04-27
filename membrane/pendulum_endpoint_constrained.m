@@ -7,7 +7,7 @@ n = 4;
 phi = sym('phi', [n,1]);
 phi_t = phi;
 for i = 1:n
-    phi_t(i) = sym(['phi' num2str(i) '(t)']);
+    phi_t(i) = str2sym(['phi' num2str(i) '(t)']);
 end
 % relative angular velocities and accelerations
 phid = sym('phid', [n,1]);
@@ -122,7 +122,7 @@ Cm = subs(Cm, [L, Diam], [L_num, D]);
 
 phid_t = phi;
 for i = 1:n
-    phid_t(i) = sym(['phid' num2str(i) '(t)']);
+    phid_t(i) = str2sym(['phid' num2str(i) '(t)']);
 end
 M = subs(M, [phi; phid], [phi_t; phid_t]);
 C = subs(C, [phi; phid], [phi_t; phid_t]);
@@ -133,9 +133,9 @@ eq = fq + (Cm.')/(Cm*Cm.') * (-Cm*fq);
 f = odeFunction(eq, [phi_t;phid_t]);
 toc
 %% solve ODE
-phi0 = [pi/8+0.2, pi/4-0.1];
-init = findIC(n,phi0);
-tspan = linspace(0, 10, 200);
+phi0 = [pi/8, pi/4];
+init = findIC(n,phi0)
+tspan = linspace(0, 10, 100);
 options = odeset('RelTol',1e-8,'AbsTol',1e-10, 'BDF', 'on');
 [t,Y] = ode45(f,tspan,init, options);
 
@@ -154,7 +154,7 @@ end
 ang = Y(:,1:n);
 
 % Set up first frame
-figure('Color', 'white','units','normalized','outerposition',[0 0 1 1])
+figure('Color', 'white')%,'units','normalized','position',[0 0 1 1])
 
 subplot(2,1,1)
 plot(t, ang, 'LineWidth', 2)
@@ -210,8 +210,8 @@ for id = 1:length(t)
     end
     drawnow;
     pause(0.03)
-end
 
+end
 %     % Get frame as an image
 %     f = getframe(gcf);
 % 
@@ -223,6 +223,7 @@ end
 %         mov(:,:,1,id) = rgb2ind(f.cdata, map, 'nodither');
 %     end
 % end
+% 
 % 
 % % Create animated GIF
 % imwrite(mov, map, 'animation.gif', 'Delaytime', 0, 'LoopCount', inf)

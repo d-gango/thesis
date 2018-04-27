@@ -12,6 +12,9 @@ end
 eqs = [xend - D; yend];
 eqs = subs(eqs, [D,L,phi(1:end-2).'], [D_num,L_num,phi0]);
 sol = vpasolve(eqs, phi(end-1:end), [pi/n pi/n]);
+if isempty(struct2array(sol))
+    error('No initial condition found.')
+end
 phi_init = double([phi0, struct2array(sol)]);
 phid_init = zeros(1,n);
 
