@@ -2,7 +2,7 @@
 tic
 clear all
 % dof
-n = 3;
+n = 10;
 % relative angles
 phi = sym('phi', [n,1]);
 phi_t = phi;
@@ -74,16 +74,16 @@ Tsub = subs(T, phid_t, phid);
 Tphid = jacobian(Tsub, phid).';
 Tphid = subs(Tphid, phid, phid_t);
 Tphid = diff(Tphid);
-Tphid = simplify(subs(Tphid, [phi_t; phid_t; phidd_t], [phi; phid; phidd]));
+Tphid = subs(Tphid, [phi_t; phid_t; phidd_t], [phi; phid; phidd]);
 
 Tsub = subs(T, [phi_t; phid_t], [phi; phid]);
-Tphi = simplify(jacobian(Tsub, phi).');
+Tphi = jacobian(Tsub, phi).';
 
 Dsub = subs(D, phid_t, phid);
-Dphid = simplify(jacobian(Dsub, phid).');
+Dphid = jacobian(Dsub, phid).';
 
 Usub = subs(U, phi_t, phi);
-Uphi = simplify(jacobian(Usub, phi).');
+Uphi = jacobian(Usub, phi).';
 
 % Lagrange equation
 Lg = Tphid - Tphi + Dphid + Uphi;
@@ -109,7 +109,7 @@ h = [xend - Diam; yend];   %h(q) = 0
 C = jacobian(h,phi);
 H = jacobian(C*phid, phi)*phid;
 
-% first order ODE eq of motion
+% first order ODE eq of motion matrices
 Mbar = sym('m',[2*n,2*n]);
 Mbar(1:n,n+1:2*n) = zeros(n,n);
 Mbar(n+1:2*n,1:n) = zeros(n,n);
@@ -120,12 +120,10 @@ Q = zeros(n,1);
 Qbar = zeros(2*n,1);
 Cbar = [zeros(n,length(h)); C.'];
 
-lambda = (C*(M\(C.')))\(-H-(C*(M\(-K+Q))));
-lambda = simplify(lambda);
-
-xdot = Mbar\(-kbar + Qbar + Cbar*lambda);
+save('eq_of_motion_data.mat','M','C','K','Q','H','Mbar','Cbar','kbar','Qbar');
 toc
-%% substitute constants and generate function handle
+%% substitute constants
+tic
 % substitute the numerical values
 D_num = 40;
 m_num = 100/n;
@@ -134,24 +132,19 @@ k_num = 10000;
 b_num = 0;
 theta_num = 1/12*m_num*L_num^2;
 
-phid_t = phi;
-for i = 1:n
-    phid_t(i) = str2sym(['phid' num2str(i) '(t)']);
-end
+params = [Diam;m;L;k;b;theta];
+params_num = [D_num;m_num;L_num;k_num;b_num;theta_num];
 
-xdot = subs(xdot, [Diam,m,L,k,b,theta],...
-                  [D_num,m_num,L_num,k_num,b_num,theta_num]);
-xdot = subs(xdot, [phi;phid], [phi_t; phid_t]);
-
-f = odeFunction(xdot, [phi_t;phid_t]);
+save('eq_of_motion_data.mat','params','params_num','phi','phid','-append');
 toc
 %% solve ODE
-phi0 = [pi/6+0.2];
+tic
+phi0 = [pi/20+0.05 pi/10 pi/10 pi/10 pi/10 pi/10 pi/10 pi/10];
 init = findIC(n,phi0)
 tspan = linspace(0, 10, 200);
-options = odeset('RelTol',1e-8,'AbsTol',1e-10, 'BDF', 'on');
-[t,Y] = ode45(f,tspan,init, options);
-
+options = odeset('RelTol',1e-6,'AbsTol',1e-8, 'BDF', 'on');
+[t,Y] = ode45(@odefun,tspan,init');
+toc
 %% animation
 % Calculating joint coordinates for animation purposes
 x = L_num*sin(Y(:,1));
@@ -173,7 +166,7 @@ plot(t, ang, 'LineWidth', 2)
 colors = 'brygkmc';
 for i = 1:n
     hh1(i) = line(t(1), ang(1,i), 'Marker', '.', 'MarkerSize', 20, ...
-        'Color', colors(i));
+        'Color', 'r');
 end
 xlabel('time (sec)')
 ylabel('angle (rad)')
@@ -202,8 +195,8 @@ pos = get(gcf, 'Position');
 width = pos(3);
 height = pos(4);
 
-% % Preallocate data (for storing frame data)
-% mov = zeros(height, width, 1, length(t), 'uint8');
+% Preallocate data (for storing frame data)
+mov = zeros(height, width, 1, length(t), 'uint8');
 
 % Loop through by changing XData and yData
 for id = 1:length(t)
@@ -223,22 +216,22 @@ for id = 1:length(t)
     drawnow;
     pause(0.03)
 
+
+    % Get frame as an image
+    f = getframe(gcf);
+
+    % Create a colormap for the first frame. For the rest of the frames,
+    % use the same colormap
+    if id == 1
+        [mov(:,:,1,id), map] = rgb2ind(f.cdata, 256, 'nodither');
+    else
+        mov(:,:,1,id) = rgb2ind(f.cdata, map, 'nodither');
+    end
 end
-%     % Get frame as an image
-%     f = getframe(gcf);
-% 
-%     % Create a colormap for the first frame. For the rest of the frames,
-%     % use the same colormap
-%     if id == 1
-%         [mov(:,:,1,id), map] = rgb2ind(f.cdata, 256, 'nodither');
-%     else
-%         mov(:,:,1,id) = rgb2ind(f.cdata, map, 'nodither');
-%     end
-% end
-% 
-% 
-% % Create animated GIF
-% imwrite(mov, map, 'animation.gif', 'Delaytime', 0, 'LoopCount', inf)
+
+
+% Create animated GIF
+imwrite(mov, map, 'animation.gif', 'Delaytime', 0, 'LoopCount', inf)
 
 %% check total energy
 phid_t = diff(phi_t);
@@ -250,7 +243,7 @@ for i = 1:length(t)
     total_energy(i) = double(subs(kin+pot, [phi_t; phid_t], Y(i,:)'));
 end
 energy_fluctuation = max(total_energy) - min(total_energy);
-rel_energy_fluctuation = energy_fluctuation / mean(total_energy);
+rel_energy_fluctuation = energy_fluctuation / total_energy(1);
 disp(['Energy fluctuation: ', num2str(rel_energy_fluctuation*100), ' %'])
 
 figure
