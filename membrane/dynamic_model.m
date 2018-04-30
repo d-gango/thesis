@@ -104,9 +104,9 @@ for i = 1:n
     xend = xend + L*sin(sum(phi(1:i)));
     yend = yend - L*cos(sum(phi(1:i)));
 end
-h = [xend - Diam; yend];   %h(q) = 0
+c = [xend - Diam; yend];   %h(q) = 0
 
-C = jacobian(h,phi);
+C = jacobian(c,phi);
 H = jacobian(C*phid, phi)*phid;
 
 % first order ODE eq of motion matrices
@@ -118,7 +118,7 @@ Mbar(n+1:2*n,n+1:2*n) = M;
 kbar = [-phid;K];
 Q = zeros(n,1);
 Qbar = zeros(2*n,1);
-Cbar = [zeros(n,length(h)); C.'];
+Cbar = [zeros(n,length(c)); C.'];
 
 save('eq_of_motion_data.mat','M','C','K','Q','H','Mbar','Cbar','kbar','Qbar');
 toc
