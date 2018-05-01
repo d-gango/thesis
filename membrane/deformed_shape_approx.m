@@ -50,7 +50,7 @@ for i = 1:n
     % give an approximation for the contact force
     Fy = epsilon*exp(-delta/epsilon);
     % the global gorizontal component Fx = f(Fy)
-    Fx = -mu*Fy*tanh(10*v(0));
+    Fx = mu*Fy*tanh(10*v(0));
     % conversion to local coordinates
     Cx = Fx*cos(psi(i)- pi/2) - Fy*sin(psi(i) -pi/2);
     Cy = Fx*sin(psi(i) -pi/2) + Fy*cos(psi(i) -pi/2);

@@ -1,8 +1,8 @@
 function par = param()
 par.n = 4;
 par.epsilon = 0.05;
-par.v = @(t) 0.5*t;
-par.d = @(t) 4;
+par.v = @(t) 0;
+par.d = @(t) 5;
 
 par.D = 40;
 par.m = 100/par.n;

@@ -118,14 +118,14 @@ for k = 1:n   % external forces and positions where they're applied
     Yc(k) = y(k) - h*cos(sum(phi(1:k)) - pi/2);
     delta(k) = Yc(k) + Diam/2 - d; % distance from contact surface
     Fy(k) = epsilon * exp(-delta(k)/epsilon); % global normal contact force
-    Fx(k) = -mu*Fy(k)*tanh(10*v); % global friction force
+    Fx(k) = mu*Fy(k)*tanh(10*(v-diff(Xc(k)))); % global friction force
 end
 % get rid of (t)
-Xc = subs(Xc.', phi_t, phi);
-Yc = subs(Yc.', phi_t, phi);
-delta = subs(delta.', phi_t, phi);
-Fx = subs(Fx.', phi_t, phi);
-Fy = subs(Fy.', phi_t, phi);
+Xc = subs(Xc.', [phi_t; phid_t], [phi; phid]);
+Yc = subs(Yc.', [phi_t; phid_t], [phi; phid]);
+delta = subs(delta.', [phi_t; phid_t], [phi; phid]);
+Fx = subs(Fx.', [phi_t; phid_t], [phi; phid]);
+Fy = subs(Fy.', [phi_t; phid_t], [phi; phid]);
 
 Q = sym('Q', [n,1]);
 for j = 1:n % generalized forces
