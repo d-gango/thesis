@@ -1,13 +1,14 @@
 %% equation of motion
 tic
 clear all
+par = param();
 % dof
-n = 3;
+n = par.n;
 % relative angles
 phi = sym('phi', [n,1]);
 phi_t = phi;
 for i = 1:n
-    phi_t(i) = sym(['phi' num2str(i) '(t)']);
+    phi_t(i) = str2sym(['phi' num2str(i) '(t)']);
 end
 % relative angular velocities and accelerations
 phid = sym('phid', [n,1]);
@@ -50,16 +51,16 @@ for i = 1:n
 end
 
 %potential energy
-syms k
+syms kt
 U = 0;
 for i = 1:n
     if i == 1
-        U = U + k*phi_t(i)^2;  % double spring stiffness
+        U = U + kt*phi_t(i)^2;  % double spring stiffness
     else
-    U = U + 1/2*k*phi_t(i)^2;
+    U = U + 1/2*kt*phi_t(i)^2;
     end
 end
-U = U + k*(pi-sum(phi_t))^2;  % double spring stiffness
+U = U + kt*(pi-sum(phi_t))^2;  % double spring stiffness
 
 % dissipative potential
 syms b
@@ -109,6 +110,32 @@ c = [xend - Diam; yend];   %h(q) = 0
 C = jacobian(c,phi);
 H = jacobian(C*phid, phi)*phid;
 
+% contact force calculation
+syms h d epsilon v mu
+for k = 1:n   % external forces and positions where they're applied
+    % position of contact point
+    Xc(k) = x(k) + h*sin(sum(phi(1:k)) - pi/2); 
+    Yc(k) = y(k) - h*cos(sum(phi(1:k)) - pi/2);
+    delta(k) = Yc(k) + Diam/2 - d; % distance from contact surface
+    Fy(k) = epsilon * exp(-delta(k)/epsilon); % global normal contact force
+    Fx(k) = -mu*Fy(k)*tanh(10*v); % global friction force
+end
+% get rid of (t)
+Xc = subs(Xc.', phi_t, phi);
+Yc = subs(Yc.', phi_t, phi);
+delta = subs(delta.', phi_t, phi);
+Fx = subs(Fx.', phi_t, phi);
+Fy = subs(Fy.', phi_t, phi);
+
+Q = sym('Q', [n,1]);
+for j = 1:n % generalized forces
+    Q(j) = 0;
+    for k = 1:n
+        Q(j) = Q(j) + [Fx(k), Fy(k)] * jacobian([Xc(k),Yc(k)],phi(j));
+    end
+end
+
+
 % first order ODE eq of motion matrices
 Mbar = sym('m',[2*n,2*n]);
 Mbar(1:n,n+1:2*n) = zeros(n,n);
@@ -116,8 +143,7 @@ Mbar(n+1:2*n,1:n) = zeros(n,n);
 Mbar(1:n,1:n) = eye(n);
 Mbar(n+1:2*n,n+1:2*n) = M;
 kbar = [-phid;K];
-Q = zeros(n,1);
-Qbar = zeros(2*n,1);
+Qbar = [zeros(n,1); Q];
 Cbar = [zeros(n,length(c)); C.'];
 
 save('eq_of_motion_data.mat','M','C','K','Q','H','Mbar','Cbar','kbar','Qbar');
@@ -125,22 +151,47 @@ toc
 %% substitute constants
 tic
 % substitute the numerical values
-D_num = 40;
-m_num = 100/n;
-L_num = D_num*sin(pi/(2*n));
-k_num = 10000;
-b_num = 0;
-theta_num = 1/12*m_num*L_num^2;
+D_num = par.D;
+m_num = par.m;
+L_num = par.L;
+k_num = par.k;
+b_num = par.b;
+theta_num = par.theta;
+h_num = par.h;
+mu_num = par.mu;
+d_num = par.d;
 
-params = [Diam;m;L;k;b;theta];
-params_num = [D_num;m_num;L_num;k_num;b_num;theta_num];
+epsilon_num = par.epsilon;
 
-save('eq_of_motion_data.mat','params','params_num','phi','phid','-append');
+params = [Diam;m;L;kt;b;theta;h;mu;epsilon];
+params_num = [D_num;m_num;L_num;k_num;b_num;theta_num;...
+              h_num;mu_num;epsilon_num];
+vd_sym = [v;d];
+
+save('eq_of_motion_data.mat','params','params_num','phi','phid','vd_sym',...
+     '-append');
 toc
 %% solve ODE
 tic
-phi0 = [pi/6 - 0.1];
-init = findIC(n,phi0)
+% calculate static deformed shape
+% use relaxed state as initial condition
+x0 = zeros(1,(n+1)*3);
+for i = 1:n+1
+    x0(3*(i-1)+1) = par.phi_r(i);
+end
+options = optimoptions('fsolve','MaxFunctionEvaluations',80000,...
+                        'MaxIterations', 5000);
+[x, fval, exitflag] = fsolve(@deformed_shape_approx, x0, options);
+if exitflag < 0
+    error('No initial deformed shape found!');
+end
+phi0 = getPhi(x);
+toc
+
+% modify IC
+phi0(1) = phi0(1);
+init = findIC(n,phi0(1:end-1))
+animateSensor(0,init); title('initial shape');
 tspan = linspace(0, 10, 200);
 options = odeset('RelTol',1e-6,'AbsTol',1e-8, 'BDF', 'on');
 [t,Y] = ode45(@odefun,tspan,init');
@@ -184,6 +235,9 @@ for i = 1:n
     hh2(i) = plot(xplot(i,:), yplot(i,:), '.-', 'MarkerSize', 20, 'LineWidth', 2);
     hold on
 end
+% contact surface
+hh3 = line([-0.5*D_num 1.5*D_num],...
+    [-D_num/2+d_num(t(1)) -D_num/2+d_num(t(1))],'LineWidth',1,'Color','k');
 hold off
 axis equal
 axis([-0.5*D_num 1.5*D_num -D_num 0.5*D_num])
@@ -213,6 +267,8 @@ for id = 1:length(t)
             set(hh2(i), 'XData', xplot(i,:), 'yData', yplot(i,:))
         end
         set(ht, 'String', sprintf('time: %0.2f sec', t(id)))
+        set(hh3, 'XData', [-0.5*D_num 1.5*D_num],...
+                 'YData', [-D_num/2+d_num(t(id)) -D_num/2+d_num(t(id))]);
     end
     drawnow;
     pause(0.03)
@@ -237,8 +293,8 @@ end
 %% check total energy
 phid_t = diff(phi_t);
 syms L
-kin = subs(T, [m,L,b,k,theta], [m_num,L_num,b_num,k_num,theta_num]);
-pot = subs(U, [m,L,b,k,theta], [m_num,L_num,b_num,k_num,theta_num]);
+kin = subs(T, [m,L,b,kt,theta], [m_num,L_num,b_num,k_num,theta_num]);
+pot = subs(U, [m,L,b,kt,theta], [m_num,L_num,b_num,k_num,theta_num]);
 total_energy = zeros(length(t),1);
 for i = 1:length(t)
     total_energy(i) = double(subs(kin+pot, [phi_t; phid_t], Y(i,:)'));
@@ -251,23 +307,8 @@ figure
 plot(t, total_energy)
 title('Total energy')
 
-
-%===========================================================================
-function xdot = odefun(t,x)
-% load symbolic matrices
-load('eq_of_motion_data.mat');
-% substitute numeric values
-C = double(subs(C, [params; phi; phid], [params_num; x]));
-Cbar = double(subs(Cbar, [params; phi; phid], [params_num; x]));
-K = double(subs(K, [params; phi; phid], [params_num; x]));
-kbar = double(subs(kbar, [params; phi; phid], [params_num; x]));
-M = double(subs(M, [params; phi; phid], [params_num; x]));
-Mbar = double(subs(Mbar, [params; phi; phid], [params_num; x]));
-Q = double(subs(Q, [params; phi; phid], [params_num; x]));
-Qbar = double(subs(Qbar, [params; phi; phid], [params_num; x]));
-H = double(subs(H, [params; phi; phid], [params_num; x]));
-% calculate xdot
-lambda = (C*(M\(C.')))\(-H-(C*(M\(-K+Q))));
-xdot = Mbar\(-kbar + Qbar + Cbar*lambda);
-disp(t)
-end
+%%
+% accel = zeros(length(t),2*n);
+% for i = 1:length(t)
+%     accel(i,:) = odefun(t(i), Y(i,:)');
+% end

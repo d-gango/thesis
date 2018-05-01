@@ -1,5 +1,11 @@
 function animateSensor(tSol, xSol)
-global D L n d contacts h
+par = param();
+D = par.D;
+L = par.L;
+n = par.n;
+d = par.d(0);
+h = par.h;
+global contacts
 % relative angles
 phi = xSol(end,1:n+1);
 % global orientations
@@ -44,7 +50,7 @@ hold on
 if d>0
     line([-10 D+10], [-D/2+d -D/2+d], 'Color', 'k') % contact surface
 end
-sensorplot = plot(X,-Y) % sensor
+sensorplot = plot(X,-Y); % sensor
 for i = 1:n
     if ismember(i,contacts)
         contactcolor = 'red';
