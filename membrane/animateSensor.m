@@ -50,14 +50,15 @@ hold on
 if d>0
     line([-10 D+10], [-D/2+d -D/2+d], 'Color', 'k') % contact surface
 end
-sensorplot = plot(X,-Y); % sensor
+sensorplot = plot(X,-Y, 'LineWidth', 2); % sensor
 for i = 1:n
     if ismember(i,contacts)
         contactcolor = 'red';
     else
         contactcolor = 'blue';
     end
-    contactplot(i) = line(contactlines(i).x, contactlines(i).y, 'Color', contactcolor);
+    contactplot(i) = line(contactlines(i).x, contactlines(i).y,...
+                'Color', contactcolor, 'LineWidth', 2);
 end
 timetext = text(D, -D/2, num2str(tSol(1)));
 xlim([-10, D+10]);
@@ -101,7 +102,7 @@ for j = 1:length(tSol)
         set(contactplot(i), 'XData', contactlines(i).x,...
                             'YData', contactlines(i).y);
     end
-    set(timetext, 'String', num2str(tSol(j)));
+    set(timetext, 'String', ''); %set(timetext, 'String', num2str(tSol(j)));
     drawnow
     
 end

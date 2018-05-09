@@ -1,8 +1,9 @@
 %% equation of motion
 tic
 clear all
+par = param();
 % dof
-n = 3;
+n = par.n;
 % relative angles
 phi = sym('phi', [n,1]);
 phi_t = phi;
@@ -125,12 +126,12 @@ toc
 %% substitute constants
 tic
 % substitute the numerical values
-D_num = 40;
-m_num = 100/n;
-L_num = D_num*sin(pi/(2*n));
-k_num = 10000;
-b_num = 0;
-theta_num = 1/12*m_num*L_num^2;
+D_num = par.D;
+m_num = par.m;
+L_num = par.L;
+k_num = par.k;
+b_num = par.b;
+theta_num = par.theta;
 
 params = [Diam;m;L;k;b;theta];
 params_num = [D_num;m_num;L_num;k_num;b_num;theta_num];
@@ -139,7 +140,8 @@ save('eq_of_motion_data.mat','params','params_num','phi','phid','-append');
 toc
 %% solve ODE
 tic
-phi0 = [pi/6 - 0.1];
+phi0 = par.phi_r(1:end-1);
+phi0(1) = phi0(1)+0.1;
 init = findIC(n,phi0)
 tspan = linspace(0, 10, 200);
 options = odeset('RelTol',1e-6,'AbsTol',1e-8, 'BDF', 'on');
@@ -252,46 +254,16 @@ plot(t, total_energy)
 title('Total energy')
 
 
-%===========================================================================
-function xdot = odefun(t,x)
-% load symbolic matrices
-load('eq_of_motion_data.mat');
-% substitute numeric values
-C = double(subs(C, [params; phi; phid], [params_num; x]));
-Cbar = double(subs(Cbar, [params; phi; phid], [params_num; x]));
-K = double(subs(K, [params; phi; phid], [params_num; x]));
-kbar = double(subs(kbar, [params; phi; phid], [params_num; x]));
-M = double(subs(M, [params; phi; phid], [params_num; x]));
-Mbar = double(subs(Mbar, [params; phi; phid], [params_num; x]));
-Q = double(subs(Q, [params; phi; phid], [params_num; x]));
-Qbar = double(subs(Qbar, [params; phi; phid], [params_num; x]));
-H = double(subs(H, [params; phi; phid], [params_num; x]));
-% calculate xdot
-lambda = (C*(M\(C.')))\(-H-(C*(M\(-K+Q))));
-xdot = Mbar\(-kbar + Qbar + Cbar*lambda);
-disp(t)
-end
 
-%========================================================================
-function init = findIC(n,phi0)
-phi = sym('phi', [n,1]);
-syms D L
-D_num = 40;
-L_num = D_num*sin(pi/(2*n));
-xend = 0;
-yend = 0;
+
+%% plot tools
+figure % relative angles time plot
+plot(t, ang, 'LineWidth', 2)
+leg = '';
 for i = 1:n
-    xend = xend + L*sin(sum(phi(1:i)));
-    yend = yend - L*cos(sum(phi(1:i)));
+    leg = [leg; '$\varphi_{' num2str(i) '}$'];
 end
-eqs = [xend - D; yend];
-eqs = subs(eqs, [D,L,phi(1:end-2).'], [D_num,L_num,phi0]);
-sol = vpasolve(eqs, phi(end-1:end), [pi/n pi/n]);
-if isempty(struct2array(sol))
-    error('No initial condition found.')
-end
-phi_init = double([phi0, struct2array(sol)]);
-phid_init = zeros(1,n);
-
-init = [phi_init, phid_init];
-end
+leg = cellstr(leg);
+legend(leg, 'Interpreter', 'latex', 'FontSize', 12)
+xlabel('time (s)')
+ylabel('angle (rad)')

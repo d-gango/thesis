@@ -121,7 +121,6 @@ Qbar = zeros(2*n,1);
 Cbar = [zeros(n,length(h)); C.'];
 
 lambda = (C*(M\(C.')))\(-H-(C*(M\(-K+Q))));
-lambda = simplify(lambda);
 
 xdot = Mbar\(-kbar + Qbar + Cbar*lambda);
 toc

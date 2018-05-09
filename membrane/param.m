@@ -2,7 +2,7 @@ function par = param()
 par.n = 4;
 par.epsilon = 0.05;
 par.v = @(t) 0;
-par.d = @(t) 5;
+par.d = @(t) 0;
 
 par.D = 40;
 par.m = 100/par.n;
