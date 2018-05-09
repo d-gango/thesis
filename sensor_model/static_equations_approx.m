@@ -1,34 +1,53 @@
-function eq = equations_approx(x)
-global n D d L kt h phi_r eps
+% !!! rewritten for dynamic simulation !!!!
+function eq = static_equations_approx(x)
+par = param();
+% numeric parameters
+n = par.n;
+D = par.D;
+if par.batch
+    d = getGlobald();
+else
+    d = par.d(0);
+end
+L = par.L;
+kt = par.k;
+h = par.h;
+mu = par.mu;
+phi_r = par.phi_r;
+epsilon = par.epsilon;
+v = par.v;
 eq = [];
 % relative angles
-phivector = x(1:3:3*n+1);
+phivector = x(1 : n+1);
+% tangential forces
+Tavector = x(n+2 : 2*(n+1));
+% normal forces
+Navector = x(2*(n+1)+1 : 3*(n+1));
 % global orientations
 psi = zeros(1,n);
+for j = 1:n
+    psi(j) = sum(phivector(1:j));
+end
+
 % iterate the segments
 for i = 1:n
-    index = (i-1)*3; % x vector jump in ponit 
     % get the unknowns from vector x
-    phi = x(index+1);
-    Ta = x(index+2);
-    Na = x(index+3);
-    phi_next = x(index+4);
-    Ta_next = x(index+5);
-    Na_next = x(index+6);
+    phi = phivector(i);
+    Ta = Tavector(i);
+    Na = Navector(i);
+    phi_next = phivector(i+1);
+    Ta_next = Tavector(i+1);
+    Na_next = Navector(i+1);
     % relaxed state angles
     relax = phi_r(i);
     relax_next = phi_r(i+1);
     % toruqes
-    Ma = -(phi-relax)*kt;
-    Mb = (phi_next-relax_next)*kt;
+    Ma = -(phi-relax)*kt(i);
+    Mb = (phi_next-relax_next)*kt(i+1);
     % force transformation
     Tb = -(Ta_next*cos(phi_next) - Na_next*sin(phi_next));
     Nb = -(Ta_next*sin(phi_next) + Na_next*cos(phi_next));
-    % global orientation
-    for j = 1:n
-        psi(j) = sum(phivector(1:j));
-    end
-    
+
     % global Y coordinate
     Y= sum(L.*cos(psi(1:i-1)));
     % Y coordinate of contact point
@@ -36,9 +55,9 @@ for i = 1:n
     % distance from contact surface
     delta = (D/2-d)-Yc;
     % give an approximation for the contact force
-    Fy = eps*exp(-delta/eps);
-    % the global gorizontal component Fx = f(Fy)
-    Fx = 0;
+    Fy = epsilon*exp(-delta/epsilon);
+    % the global horizontal component Fx = f(Fy)
+    Fx = mu*Fy*tanh(10*v(0));
     % conversion to local coordinates
     Cx = Fx*cos(psi(i)- pi/2) - Fy*sin(psi(i) -pi/2);
     Cy = Fx*sin(psi(i) -pi/2) + Fy*cos(psi(i) -pi/2);

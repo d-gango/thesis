@@ -1,4 +1,4 @@
-function xdot = odefun(t,x)
+function xdot = eq_of_motion(t,x)
 % load symbolic matrices
 load('eq_of_motion_data.mat');
 par = param();

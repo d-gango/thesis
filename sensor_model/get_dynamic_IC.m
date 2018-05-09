@@ -1,4 +1,7 @@
-function init = findIC(n,phi0)
+% construct initial conditions consistent with constraints
+function init = get_dynamic_IC(phi0)
+par = param();
+n = par.n;
 phi = sym('phi', [n,1]);
 syms D L
 par = param();

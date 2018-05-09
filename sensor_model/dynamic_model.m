@@ -1,9 +1,9 @@
 %% equation of motion
 tic
 clear all
-par = param();
-% dof
-n = par.n;
+par = param(); %get parameters
+n = par.n; % number of segments
+
 % relative angles
 phi = sym('phi', [n,1]);
 phi_t = phi;
@@ -51,24 +51,20 @@ for i = 1:n
 end
 
 %potential energy
-syms kt
+kt = sym('kt', [1, n+1]);
 U = 0;
 for i = 1:n
-    if i == 1
-        U = U + kt*phi_t(i)^2;  % double spring stiffness
-    else
-    U = U + 1/2*kt*phi_t(i)^2;
-    end
+    U = U + 1/2*kt(i)*phi_t(i)^2;
 end
-U = U + kt*(pi-sum(phi_t))^2;  % double spring stiffness
+U = U + 1/2*kt(end)*(pi-sum(phi_t))^2;
 
 % dissipative potential
-syms b
+b = sym('b', [1, n+1]);
 D = 0;
 for i = 1:n
-    D = D + 1/2*b*phid_t(i)^2;
+    D = D + 1/2*b(i)*phid_t(i)^2;
 end
-D = D + 1/2*b*(-sum(phid_t))^2;
+D = D + 1/2*b(end)*(-sum(phid_t))^2;
 
 % derivatives
 Tsub = subs(T, phid_t, phid);
@@ -163,8 +159,8 @@ d_num = par.d;
 
 epsilon_num = par.epsilon;
 
-params = [Diam;m;L;kt;b;theta;h;mu;epsilon];
-params_num = [D_num;m_num;L_num;k_num;b_num;theta_num;...
+params = [Diam;m;L;kt.';b.';theta;h;mu;epsilon];
+params_num = [D_num;m_num;L_num;k_num';b_num';theta_num;...
               h_num;mu_num;epsilon_num];
 vd_sym = [v;d];
 
@@ -176,25 +172,23 @@ tic
 % calculate static deformed shape
 % use relaxed state as initial condition
 x0 = zeros(1,(n+1)*3);
-for i = 1:n+1
-    x0(3*(i-1)+1) = par.phi_r(i);
-end
+x0(1:n+1) = par.phi_r;
 options = optimoptions('fsolve','MaxFunctionEvaluations',80000,...
                         'MaxIterations', 5000);
-[x, fval, exitflag] = fsolve(@deformed_shape_approx, x0, options);
+[x, fval, exitflag] = fsolve(@static_equations_approx, x0, options);
 if exitflag < 0
     error('No initial deformed shape found!');
 end
-phi0 = getPhi(x);
+phi0 = x(1:n);
 toc
 
 % modify IC
-phi0(1) = phi0(1);
-init = findIC(n,phi0(1:end-1))
+phi0(1) = phi0(1) + 0.1;
+init = get_dynamic_IC(phi0);
 animateSensor(0,init); title('initial shape');
 tspan = linspace(0, 10, 200);
 options = odeset('RelTol',1e-6,'AbsTol',1e-8, 'BDF', 'on');
-[t,Y] = ode45(@odefun,tspan,init');
+[t,Y] = ode45(@eq_of_motion,tspan,init');
 toc
 %% animation
 % Calculating joint coordinates for animation purposes
