@@ -3,7 +3,7 @@ par = param();
 filename = ['static_', num2str(par.n)];
 load(filename);
 % set grid for d
-depth = -0.3:0.1:6;
+depth = 4.2:0.1:6;
 F = [];
 successful = [];
 

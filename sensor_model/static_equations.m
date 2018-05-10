@@ -30,7 +30,7 @@ end
 
 % iterate the segments
 for i = 1:n
- % get the unknowns from vector x
+    % get the unknowns from vector x
     phi = phivector(i);
     Ta = Tavector(i);
     Na = Navector(i);
@@ -41,8 +41,13 @@ for i = 1:n
     relax = phi_r(i);
     relax_next = phi_r(i+1);
     % toruqes
-    Ma = -(phi-relax)*kt(i);
-    Mb = (phi_next-relax_next)*kt(i+1);
+    if par.offset == 1
+        Ma = -(phi-relax)*kt(i);
+        Mb = (phi_next-relax_next)*kt(i+1);
+    else
+        Ma = -(phi)*kt(i);
+        Mb = (phi_next)*kt(i+1);
+    end
     % force transformation
     Tb = -(Ta_next*cos(phi_next) - Na_next*sin(phi_next));
     Nb = -(Ta_next*sin(phi_next) + Na_next*cos(phi_next));

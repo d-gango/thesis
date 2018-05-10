@@ -1,11 +1,14 @@
 clear all
 global contacts
-contacts = [7 8 13 14]; % list of segments with assumed contact
+contacts = []; % list of segments with assumed contact
 par = param();
 n = par.n;
 phi_r = par.phi_r;
 if par.batch ~= 0
     error('Should not be is batch mode!')
+end
+if par.v(0) ~= 0
+    warning('Velocity is not 0!')
 end
 % initial values
 x0 = zeros(1,(n+1)*3 + length(contacts));
@@ -29,5 +32,5 @@ Fysol = [];
 if ~isempty(contacts)
     Fysol = x(3*(n+1)+1:end);
 end
-
+% Msol = phisol .* par.k;
 

@@ -3,7 +3,11 @@ par = param();
 D = par.D;
 L = par.L;
 n = par.n;
-d = par.d(0);
+if par.batch
+    d = getGlobald();
+else
+    d = par.d(0);
+end
 h = par.h;
 global contacts
 % relative angles
@@ -47,9 +51,7 @@ end
 figure
 line([0 D], [0 0], 'Color', 'k') % sensor base
 hold on
-if d>0
-    line([-10 D+10], [-D/2+d -D/2+d], 'Color', 'k') % contact surface
-end
+line([-10 D+10], [-D/2+d -D/2+d], 'Color', 'k') % contact surface
 sensorplot = plot(X,-Y, 'LineWidth', 2); % sensor
 for i = 1:n
     if ismember(i,contacts)

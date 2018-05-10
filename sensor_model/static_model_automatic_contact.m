@@ -19,7 +19,7 @@ x0 = zeros(1,(n+1)*3 + length(contacts));
 % use relaxed state as initial condition
 x0(1:n+1) = phi_r;
 % %----------------------------------------
-options = optimoptions('fsolve','MaxFunctionEvaluations',80000,...
+options = optimoptions('fsolve','MaxFunctionEvaluations',800000,...
                         'MaxIterations', 5000);
 [x, fval, exitflag] = fsolve(@static_equations_approx, x0, options);
 if exitflag < 1
@@ -28,7 +28,7 @@ end
 animateSensor(0,x);
 title('Approximate solution')
 
-% figuring out the contact points =========================================
+%% figuring out the contact points =========================================
 % approximate phi angles
 phi_a = x(1:n+1);
 % approximate orientations
