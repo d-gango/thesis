@@ -7,7 +7,7 @@ phi_r = par.phi_r;
 D = par.D;
 d = par.d(0);
 if par.batch ~= 0
-    error('Should not be is batch mode!')
+    error('Should not be in batch mode!')
 end
 if par.v(0) ~= 0
     error('Velocity should be 0!')

@@ -5,7 +5,7 @@ par.v = @(t) 0;  % relative velocity of contact surface
 par.d = @(t) 6;  % contact depth
 
 par.batch = 0; % set to 1 for batch run
-par.offset = 0; % springs relaxed in equilibrium
+par.offset = 1; % springs relaxed in equilibrium
 
 par.D = 40;  % sensor diameter
 par.m = 100/par.n;  % mass of one segment
@@ -23,15 +23,21 @@ phi_r(1) = phi_r(1)/2;
 phi_r(end) = phi_r(end)/2;
 par.phi_r = phi_r;
 
-% new kt calculation
-par.t = 0.3; % thickness [mm]
-par.E = 25000; % Young's modulus [kPa]
-psi_r = getPsi(par.phi_r);
-dy = par.L*cos(psi_r);
-kt =(par.E * par.t^3 / 6).*...
-    1./(atan(dy(1:par.n/2) ./ sqrt((par.D/2)^2 - dy(1:par.n/2).^2)));
-par.k = [kt, 10e6, flip(kt)];
-end
+% % new kt calculation
+% par.t = 0.3; % thickness [mm]
+% par.E = 25000; % Young's modulus [kPa]
+% psi_r = getPsi(par.phi_r);
+% y = zeros(1,par.n+1);
+% for i = 2:par.n+1
+%     y(i) = y(i-1) - par.L*cos(psi_r(i-1));
+% end
+% d = zeros(1,par.n/2);
+% for i=1:par.n/2
+%     d(i) = 2*pi*sqrt(par.D^2/4 - ((y(i)+y(i+1))/2)^2);
+% end
+% kt = (par.E .* d .* par.t^3) ./ (12*par.L);
+% par.k = [kt, kt(end), flip(kt)];
+% end
 %===================================================================
 function psi = getPsi(phi)
 n = length(phi);

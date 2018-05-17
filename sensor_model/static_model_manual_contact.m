@@ -33,4 +33,5 @@ if ~isempty(contacts)
     Fysol = x(3*(n+1)+1:end);
 end
 % Msol = phisol .* par.k;
+% Msol = (phisol-par.phi_r) .* par.k;
 
