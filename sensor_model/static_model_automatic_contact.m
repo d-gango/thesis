@@ -113,6 +113,10 @@ if ~isempty(contacts)
     Fysol = x(3*(n+1)+1:end);
 end
 
+[deformed_joints, deformed_pins] = deformedShape3D(phisol);
+figure
+drawSurface(deformed_joints, deformed_pins);
+
 
 
 %=========================================================================

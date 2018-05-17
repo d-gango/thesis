@@ -7,7 +7,7 @@ par.d = @(t) 6;  % contact depth
 par.batch = 0; % set to 1 for batch run
 par.offset = 1; % springs relaxed in equilibrium
 
-par.D = 40;  % sensor diameter
+par.D = 39.5;  % sensor diameter
 par.m = 100/par.n;  % mass of one segment
 par.L = par.D*sin(pi/(2*par.n)); % length of one segment
 par.k = ones(1,par.n+1)*10000; % spring stiffness
@@ -24,7 +24,7 @@ phi_r(end) = phi_r(end)/2;
 par.phi_r = phi_r;
 
 % % new kt calculation
-% par.t = 0.3; % thickness [mm]
+% par.t = 1; % thickness [mm]
 % par.E = 25000; % Young's modulus [kPa]
 % psi_r = getPsi(par.phi_r);
 % y = zeros(1,par.n+1);
@@ -37,12 +37,5 @@ par.phi_r = phi_r;
 % end
 % kt = (par.E .* d .* par.t^3) ./ (12*par.L);
 % par.k = [kt, kt(end), flip(kt)];
-% end
+end
 %===================================================================
-function psi = getPsi(phi)
-n = length(phi);
-psi = zeros(1,n);
-for j = 1:n
-    psi(j) = sum(phi(1:j));
-end
-end
