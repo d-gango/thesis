@@ -45,9 +45,9 @@ contact_guess = find(Yc_a <= ma & Yc_a >= mi);
 contact_guess_half = contact_guess(1:length(contact_guess)/2);
 
 % try to find soultion with a subset of the guessed contact points
-cn = length(contact_guess_half);
+cn = 0;
 solved = 0;
-while cn >= 0
+while cn <= length(contact_guess_half)
     % get all combinations
     combinations = combnk(contact_guess_half, cn);
     % mirror
@@ -95,13 +95,15 @@ while cn >= 0
     if solved
         break;
     else
-        cn = cn-1;
+        cn = cn+1;
     end
 end
 
 if solved
     animateSensor(0,x);
     title('Solution');
+else
+    error('No solution')
 end
 
 % sort out the soultuons
@@ -116,7 +118,8 @@ end
 [deformed_joints, deformed_pins] = deformedShape3D(phisol);
 figure
 drawSurface(deformed_joints, deformed_pins);
-
+hold on
+fsurf(@(x,y) -par.D/2 + par.d(0))
 
 
 %=========================================================================
