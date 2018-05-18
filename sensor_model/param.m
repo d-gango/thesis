@@ -1,5 +1,5 @@
 function par = param()
-par.n = 20;  % number of segments
+par.n = 30;  % number of segments
 par.epsilon = 0.06; % parameter for contact force approximation
 par.v = @(t) 0;  % relative velocity of contact surface
 par.d = @(t) 5;  % contact depth
@@ -23,19 +23,23 @@ phi_r(1) = phi_r(1)/2;
 phi_r(end) = phi_r(end)/2;
 par.phi_r = phi_r;
 
-% % new kt calculation
-% par.t = 1; % thickness [mm]
-% par.E = 25000; % Young's modulus [kPa]
-% psi_r = getPsi(par.phi_r);
-% y = zeros(1,par.n+1);
-% for i = 2:par.n+1
-%     y(i) = y(i-1) - par.L*cos(psi_r(i-1));
-% end
-% d = zeros(1,par.n/2);
-% for i=1:par.n/2
-%     d(i) = 2*pi*sqrt(par.D^2/4 - ((y(i)+y(i+1))/2)^2);
-% end
-% kt = (par.E .* d .* par.t^3) ./ (12*par.L);
-% par.k = [kt, kt(end), flip(kt)];
+% new kt calculation
+par.t = 1; % thickness [mm]
+par.E = 25000; % Young's modulus [kPa]
+psi_r = getPsi(par.phi_r);
+y = zeros(1,par.n+1);
+for i = 2:par.n+1
+    y(i) = y(i-1) - par.L*cos(psi_r(i-1));
+end
+% two different methods for width, CHOOSE ONE!
+d = zeros(1,par.n/2);  % simple mean
+w = zeros(1,par.n/2);  % integral mean
+for i=1:par.n/2
+    w(i) =2*pi/par.L * integral(@(ybar) sqrt(par.D^2/4 - (y(i) + ybar.*cos(psi_r(i))).^2),0,par.L);
+    d(i) = 2*pi*sqrt(par.D^2/4 - ((y(i)+y(i+1))/2)^2);
+end
+kt = (par.E .* w .* par.t^3) ./ (12*par.L);
+par.k = [kt, kt(end), flip(kt)];
+
 end
 %===================================================================

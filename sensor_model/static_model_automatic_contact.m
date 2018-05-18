@@ -19,7 +19,7 @@ x0 = zeros(1,(n+1)*3 + length(contacts));
 % use relaxed state as initial condition
 x0(1:n+1) = phi_r;
 % %----------------------------------------
-options = optimoptions('fsolve','MaxFunctionEvaluations',800000,...
+options = optimoptions('fsolve','MaxFunctionEvaluations',80000,...
                         'MaxIterations', 5000);
 [x, fval, exitflag] = fsolve(@static_equations_approx, x0, options);
 if exitflag < 1
@@ -106,7 +106,7 @@ else
     error('No solution')
 end
 
-% sort out the soultuons
+%% sort out the soultuons
 phisol = x(1 : n+1);
 Tasol = x(n+2 : 2*(n+1));
 Nasol = x(2*(n+1)+1 : 3*(n+1));
@@ -119,7 +119,7 @@ end
 figure
 drawSurface(deformed_joints, deformed_pins);
 hold on
-fsurf(@(x,y) -par.D/2 + par.d(0))
+%fmesh(@(x,y) -par.D/2 + par.d(0))
 
 
 %=========================================================================
