@@ -1,3 +1,5 @@
+pins = getPinData();
+load('C:\Users\Gango\Google Drive\Bristol\thesis\tactip-benchmarks\trainDepthVideo05012246/expt.mat')
 figure
 plot(Expt.pinPositions(:,1),Expt.pinPositions(:,2), '.')
 axis equal
