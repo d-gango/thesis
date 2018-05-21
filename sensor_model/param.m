@@ -1,5 +1,5 @@
 function par = param()
-par.n = 30;  % number of segments
+par.n = 20;  % number of segments
 par.epsilon = 0.06; % parameter for contact force approximation
 par.v = @(t) 0;  % relative velocity of contact surface
 par.d = @(t) 5;  % contact depth

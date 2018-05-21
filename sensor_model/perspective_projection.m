@@ -1,45 +1,58 @@
+clear all
+
 pins = getPinData();
 load('tactip-benchmarks\trainDepthVideo05012246/expt.mat')
 load('tactip-benchmarks\trainDepthVideo05012246/expt_mapping.mat')
+load('sol.mat')
+cam_reference = Expt.pinPositions';
+cam_reference = cam_reference(:,expt_mapping);
+
 figure
-plot(Expt.pinPositions(:,1),Expt.pinPositions(:,2), '.')
+plot(cam_reference(1,:),cam_reference(2,:), '.')
 axis equal
 xlabel('x'); ylabel('y')
 title('original camera image')
 
-hold on
-for i = expt_mapping
-    plot(Expt.pinPositions(i,1), Expt.pinPositions(i,2), '.r', 'MarkerSize', 15);
-end
-
+par = param();
+[deformed_joints, deformed_pins] = deformedShape3D(phisol);
 % figure
-% scatter3(pins.original_coordinates(1,:), -pins.original_coordinates(3,:),...
-%     pins.original_coordinates(2,:));
+% plot3(deformed_pins(1,:),-deformed_pins(3,:),deformed_pins(2,:), '.')
 % axis equal
 % xlabel('x'); ylabel('-z'); zlabel('y')
+% title('deformed pins')
 
-f = 150;
-camera_position = 50;
-camera_coordinates = pins.original_coordinates;
-camera_coordinates(2,:) =camera_coordinates(2,:)-camera_position;
+% % interpolation
+% cam_deformed_x = griddata(pins.original_coordinates(1,:),...
+%                  pins.original_coordinates(2,:),...
+%                  pins.original_coordinates(3,:),...
+%                  cam_reference(1,:),...
+%                  deformed_pins(1,:),deformed_pins(2,:),deformed_pins(3,:),...
+%                  'linear');
+% cam_deformed_y = griddata(pins.original_coordinates(1,:),...
+%                  pins.original_coordinates(2,:),...
+%                  pins.original_coordinates(3,:),...
+%                  cam_reference(2,:),...
+%                  deformed_pins(1,:),deformed_pins(2,:),deformed_pins(3,:),...
+%                  'linear');
 
-% figure
-% scatter3(camera_coordinates(1,:), -camera_coordinates(3,:),...
-%     camera_coordinates(2,:));
-% axis equal
-% xlabel('x'); ylabel('-z'); zlabel('y')
+% interpolation
+fx = scatteredInterpolant(pins.original_coordinates(1,:)',...
+                 pins.original_coordinates(2,:)',...
+                 pins.original_coordinates(3,:)',...
+                 cam_reference(1,:)', 'natural' ,'linear');
+fy = scatteredInterpolant(pins.original_coordinates(1,:)',...
+                 pins.original_coordinates(2,:)',...
+                 pins.original_coordinates(3,:)',...
+                 cam_reference(2,:)', 'natural' ,'linear');
+cam_deformed_x = fx(deformed_pins(1,:), deformed_pins(2,:), deformed_pins(3,:));
+cam_deformed_y = fy(deformed_pins(1,:), deformed_pins(2,:), deformed_pins(3,:));
 
-projected_coordinates =zeros(3,length(pins.alpha));
-for i = 1:length(pins.alpha)
-    projected_coordinates(:,i) = ...
-        f/camera_coordinates(2,i) * camera_coordinates(:,i);
-end
 figure
-plot(camera_coordinates(1,:),-camera_coordinates(3,:), '.')
+plot(cam_deformed_x, cam_deformed_y, '.')
 axis equal
-xlabel('x'); ylabel('z');
-title('perspective projection')
-hold on
-for i = 1:length(camera_coordinates(1,:))
-    plot(camera_coordinates(1,i), -camera_coordinates(3,i), '.r', 'MarkerSize', 15);
-end
+xlabel('x'); ylabel('y')
+title('interpolated deformed image')
+% hold on
+% for i = 1:length(cam_deformed_x)
+%     plot(cam_deformed_x(i), cam_deformed_y(i), '.r', 'MarkerSize', 10)
+% end
