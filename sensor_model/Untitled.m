@@ -1,12 +1,10 @@
 clear all
-par = param();
-filename = ['static_', num2str(par.n), '_thick'];
-% load(filename);
-% %set grid for d
-% no_success = find([solutions.success] == 0);
-% depth = [solutions.d];
-depth = -1:0.1:4.9;
-
+par = param_temp();
+filename = ['static_', num2str(par.n), '_constant_k'];
+%load(filename);
+% set grid for d
+depth = -0.3:0.1:60;
+F = [];
 successful = [];
 
 global contacts
@@ -82,7 +80,7 @@ for d = depth
                 phi = x(1:n+1);
                 psi = getPsi(phi);
                 Yc = getYc(psi);
-                overlap = find(round(Yc,2) > round(D/2-d, 2));
+                overlap = find(round(Yc,2) > (D/2-d));
                 if isempty(overlap)
                     disp('No overlap.')
                     % check negative contact forces
@@ -110,11 +108,8 @@ for d = depth
         end
     end
     
-%     ind = find(round([solutions.d],2) == round(d,2));
-%     if isempty(ind)
-%         ind = length([solutions.d]) +1;
-%     end
-    ind = find(round(depth,2) == round(d,2));
+    ind = find(d == depth);
+    
     solutions(ind).sol = x;
     solutions(ind).F = sum(Fy);
     solutions(ind).success = solved;

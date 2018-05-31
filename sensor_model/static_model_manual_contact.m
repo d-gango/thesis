@@ -1,6 +1,6 @@
 clear all
 global contacts
-contacts = []; % list of segments with assumed contact
+contacts = [8 9 12 13]; % list of segments with assumed contact
 par = param();
 n = par.n;
 phi_r = par.phi_r;

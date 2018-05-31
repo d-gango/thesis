@@ -1,10 +1,10 @@
-function par = param()
+function par = param_temp()
 par.n = 20;  % number of segments
 par.epsilon = 0.06; % parameter for contact force approximation
 par.v = @(t) 0;  % relative velocity of contact surface
 par.d = @(t) 5;  % contact depth
 
-par.batch = 0; % set to 1 for batch run
+par.batch = 1; % set to 1 for batch run
 par.offset = 1; % springs relaxed in equilibrium
 
 par.D = 39.5;  % sensor diameter
@@ -23,14 +23,14 @@ phi_r(1) = phi_r(1)/2;
 phi_r(end) = phi_r(end)/2;
 par.phi_r = phi_r;
 
-% % new kt calculation
-% par.t = 1; % thickness [mm]
-% par.E = 25000; % Young's modulus [kPa]
-% psi_r = getPsi(par.phi_r);
-% y = zeros(1,par.n+1);
-% for i = 2:par.n+1
-%     y(i) = y(i-1) - par.L*cos(psi_r(i-1));
-% end
+% new kt calculation
+par.t = 1; % thickness [mm]
+par.E = 25000; % Young's modulus [kPa]
+psi_r = getPsi(par.phi_r);
+y = zeros(1,par.n+1);
+for i = 2:par.n+1
+    y(i) = y(i-1) - par.L*cos(psi_r(i-1));
+end
 % % two different methods for width, CHOOSE ONE!
 % d = zeros(1,par.n/2);  % simple mean
 % w = zeros(1,par.n/2);  % integral mean
