@@ -1,6 +1,6 @@
 function measurement_data = getMeasurementData()
 load('tactip-benchmarks\trainDepthVideo05012246\c01_01');
-load('tactip-benchmarks\trainDepthVideo05012246/expt_mapping.mat')
+load('tactip-benchmarks\trainDepthVideo05012246\expt_mapping.mat')
 for i = 1:length(data)
     tmp = data{i};
     pins_xy = [];
