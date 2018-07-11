@@ -11,7 +11,7 @@ for i = 2:par.n+1
 end
 % generate 3D joint coordinates
 deformed_joints = [];
-res = 50;
+res = 100;
 d_alpha = linspace(0, pi, res);
 % rotate cross section with d_alpha resolution
 for i = 1:res-1

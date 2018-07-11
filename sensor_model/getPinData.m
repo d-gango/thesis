@@ -1,13 +1,15 @@
+% loads 3D pin coordinates from file pin_data.mat
 function pins = getPinData()
 load pin_data.mat
 points = round(points, 2);
 pins.original_coordinates = points;
-% % original configuration
-% figure
-% scatter3(points(1,:), -points(3,:), points(2,:));
-% title('Initial points')
-% axis equal
-% xlabel('x'); ylabel('-z'); zlabel('y')
+% original configuration
+figure
+scatter3(points(1,:), -points(3,:), points(2,:), 'MarkerFaceColor', 'flat');
+%title('Initial pin positions')
+axis equal
+zlim([-20 0])
+xlabel('x'); ylabel('-z'); zlabel('y')
 
 par = param();
 psi = getPsi(par.phi_r);
