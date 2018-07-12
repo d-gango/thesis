@@ -11,9 +11,13 @@ zlin = linspace(min(z), max(z), 50);
 Y = griddata(x,-z,y,X,-Z,'natural');
 mesh(X,-Z,Y)
 %axis([-par.D/2 par.D/2 -par.D/2  par.D/2 -par.D/2 0]);
-axis equal
-xlabel('x'); ylabel('-z'); zlabel('y')
+% figure
 hold on
-plot3(x, -z, y, '.', 'MarkerSize', 5);
-plot3(pin_coordinates(1,:), -pin_coordinates(3,:), pin_coordinates(2,:),...
-     '.r', 'MarkerSize', 10);
+scatter3(x, -z, y, '.');
+% hold on
+scatter3(pin_coordinates(1,:), -pin_coordinates(3,:), pin_coordinates(2,:),...
+     'MarkerFaceColor', 'flat');
+ 
+axis equal
+zlim([-20 0]);
+xlabel('x [mm]'); ylabel('-z [mm]'); zlabel('y [mm]')

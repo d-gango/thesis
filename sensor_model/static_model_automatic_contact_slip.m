@@ -26,6 +26,7 @@ if exitflag < 1
     disp('Solution failed')
 end
 animateSensor(0,x);
+xlabel('x [mm]'); ylabel('y [mm]');
 title('Approximate solution')
 
 % figuring out the contact points =========================================
@@ -43,9 +44,9 @@ mi = ma - contact_bw;
 contact_guess = find(Yc_a <= ma & Yc_a >= mi);
 
 % try to find soultion with a subset of the guessed contact points
-cn = length(contact_guess);
+cn = 0;
 solved = 0;
-while cn >= 0
+while cn <= length(contact_guess)
     % get all combinations
     combinations = combnk(contact_guess, cn);
     % iterate the possible contacts
@@ -90,12 +91,13 @@ while cn >= 0
     if solved
         break;
     else
-        cn = cn-1;
+        cn = cn+1;
     end
 end
 
 if solved
     animateSensor(0,x);
+    xlabel('x [mm]'); ylabel('y [mm]');
     title('Solution');
 end
 

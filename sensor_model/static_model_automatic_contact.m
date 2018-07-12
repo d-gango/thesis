@@ -26,6 +26,7 @@ if exitflag < 1
     disp('Solution failed')
 end
 animateSensor(0,x);
+xlabel('x [mm]'); ylabel('y [mm]');
 title('Approximate solution')
 
 %% figuring out the contact points =========================================
@@ -101,6 +102,7 @@ end
 
 if solved
     animateSensor(0,x);
+    xlabel('x [mm]'); ylabel('y [mm]');
     title('Solution');
 else
     error('No solution')
@@ -116,9 +118,9 @@ if ~isempty(contacts)
 end
 
 [deformed_joints, deformed_pins] = deformedShape3D(phisol);
-figure
+
 drawSurface(deformed_joints, deformed_pins);
-hold on
+% hold on
 %fmesh(@(x,y) -par.D/2 + par.d(0))
 
 

@@ -6,12 +6,12 @@ load pin_data.mat
 points = round(points, 2);
 pins.original_coordinates = points;
 % original configuration
-figure
-scatter3(points(1,:), -points(3,:), points(2,:), 'MarkerFaceColor', 'flat');
-%title('Initial pin positions')
-axis equal
-zlim([-20 0])
-xlabel('x'); ylabel('-z'); zlabel('y')
+% figure
+% scatter3(points(1,:), -points(3,:), points(2,:), 'MarkerFaceColor', 'flat');
+% %title('Initial pin positions')
+% axis equal
+% zlim([-20 0])
+% xlabel('x [mm]'); ylabel('-z [mm]'); zlabel('y [mm]')
 
 par = param();
 psi = getPsi(par.phi_r);
