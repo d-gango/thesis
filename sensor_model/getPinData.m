@@ -1,4 +1,6 @@
 % loads 3D pin coordinates from file pin_data.mat
+% calculates the pins relative angle to the XY plane
+% finds the closest segment of the 2D model to each pin
 function pins = getPinData()
 load pin_data.mat
 points = round(points, 2);
@@ -15,7 +17,7 @@ par = param();
 psi = getPsi(par.phi_r);
 % coordinates of joints in the cross-section plane
 joint_x = zeros(1, par.n+1);
-joint_x(1) = -par.D/2; % shift x axis to the middle
+joint_x(1) = -par.D/2; % shift the 0 of x axis to the left
 joint_y = zeros(1, par.n+1);
 for i = 2:par.n+1
     joint_x(i) = joint_x(i-1) + par.L*sin(psi(i-1));
