@@ -1,4 +1,5 @@
 clear all
+close all
 % load solution file
 load('static_20_thick.mat');
 % load measurement data
@@ -42,4 +43,4 @@ figure
 plot(1:length(measurement_data), abs_difference(1,:),...
     1:length(measurement_data), abs_difference(2,:))
 legend('x', 'y')
-ylabel('error')
+ylabel('error sum')

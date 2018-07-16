@@ -183,9 +183,10 @@ phi0 = x(1:n);
 toc
 
 % modify IC
-phi0(1) = phi0(1) + 0.1;
+phi0(1) = phi0(1);
 init = get_dynamic_IC(phi0);
 animateSensor(0,init); title('initial shape');
+% dynamic simulation
 tspan = linspace(0, 10, 200);
 options = odeset('RelTol',1e-6,'AbsTol',1e-8, 'BDF', 'on');
 [t,Y] = ode45(@eq_of_motion,tspan,init');
