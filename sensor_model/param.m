@@ -1,8 +1,8 @@
 function par = param()
-par.n = 20;  % number of segments
+par.n = 10;  % number of segments
 par.epsilon = 0.06; % parameter for contact force approximation
-par.v = @(t) 0;  % relative velocity of contact surface
-par.d = @(t) 0.5*t;  % contact depth
+par.v = @(t) 2*heaviside(t-0.1);  % relative velocity of contact surface
+par.d = @(t) 4;  % contact depth
 
 par.batch = 0; % set to 1 for batch run
 par.offset = 1; % springs relaxed in equilibrium
@@ -16,7 +16,7 @@ par.b = ones(1,par.n+1)*1000; % damping coeff.
 par.b(1) = 2*par.b(1); par.b(end) = par.b(1);
 par.theta = 1/12*par.m*par.L^2; % moment of inertia
 par.h = 0.3;  % length of perpendicular contact part
-par.mu = 0.7; % sliding friction coeff.
+par.mu = 0.5; % sliding friction coeff.
 
 phi_r = ones(1,par.n+1)*pi/par.n;  % relaxed state angles
 phi_r(1) = phi_r(1)/2;
