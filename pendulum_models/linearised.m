@@ -120,14 +120,15 @@ Q = zeros(n,1);
 Qbar = zeros(2*n,1);
 Cbar = [zeros(n,length(h)); C.'];
 
-% for simlicity, phid = 0 when liearising around a fixed point
-% K = subs(K,phid, zeros(size(phid)));
-% kbar = subs(kbar,phid, zeros(size(phid)));
 
+
+% constraint enforcement !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+f = C*phid;
+%!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 A1 = C*(M\(C.'));
 A2 = (M\(-K+Q));
 A3 = (C*A2);
-A4 = -H-A3;
+A4 = -H-f-A3;
 
 % for simlicity, phid = 0 when liearising around a fixed point
 % A1 = subs(A1,phid, zeros(size(phid)));
@@ -135,10 +136,9 @@ A4 = -H-A3;
 
 lambda = A1\A4;
 
-xdot = Mbar\(-kbar + Qbar + Cbar*lambda);
 toc
 %% substitute constants and generate function handle
-% substitute the numerical values
+%the numerical values
 D_num = 40;
 m_num = 100/n;
 L_num = D_num*sin(pi/(2*n));
@@ -146,20 +146,32 @@ k_num = 10000;
 b_num = 1000;
 theta_num = 1/12*m_num*L_num^2;
 
-
-xdot_num = subs(xdot, [Diam,m,L,k,b,theta],...
-                  [D_num,m_num,L_num,k_num,b_num,theta_num]);
-
 % linearized system matrix
-A = jacobian(xdot_num,[phi; phid]);
+dkdq = jacobian(K,phi);
+dkdqd = jacobian(K,phid);
+dQdq = jacobian(Q,phi);
+dcldq = jacobian(C.' * lambda,phi);
+dcldqd = jacobian(C.' * lambda,phid);
 % eqiulibrium state
 phi0 = ones(n,1)*pi/n;
 phi0(1) = phi0(1)/2;
 phid0 = zeros(n,1);
-% substitute equilibrium state
-A = double(subs(A, [phi;phid], [phi0;phid0]));
+% substitute equilibrium state and numerical values
+M_num = double( subs(M, [Diam,m,L,k,b,theta,phi.',phid.'],...
+               [D_num,m_num,L_num,k_num,b_num,theta_num,phi0.',phid0.']));
+dkdq_num = double( subs(dkdq, [Diam,m,L,k,b,theta,phi.',phid.'],...
+               [D_num,m_num,L_num,k_num,b_num,theta_num,phi0.',phid0.']));
+dkdqd_num = double( subs(dkdqd, [Diam,m,L,k,b,theta,phi.',phid.'],...
+               [D_num,m_num,L_num,k_num,b_num,theta_num,phi0.',phid0.']));
+dQdq_num = double( subs(dQdq, [Diam,m,L,k,b,theta,phi.',phid.'],...
+               [D_num,m_num,L_num,k_num,b_num,theta_num,phi0.',phid0.']));
+dcldq_num = double( subs(dcldq, [Diam,m,L,k,b,theta,phi.',phid.'],...
+               [D_num,m_num,L_num,k_num,b_num,theta_num,phi0.',phid0.']));
+dcldqd_num = double( subs(dcldqd, [Diam,m,L,k,b,theta,phi.',phid.'],...
+               [D_num,m_num,L_num,k_num,b_num,theta_num,phi0.',phid0.']));
+
+A = [zeros(n,n), eye(n);...
+    M_num\(-dkdq_num + dQdq_num + dcldq_num) , M_num\(-dkdqd_num + dcldqd_num)];
 % eigenvalues
 [V,D] = eig(A);
 eigenvalues = diag(D)
-
-toc
