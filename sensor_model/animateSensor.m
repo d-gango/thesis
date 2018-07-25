@@ -1,7 +1,7 @@
 function animateSensor(tSol, xSol)
 par = param();
 D = par.D;
-L = par.L;
+L0 = par.L;
 n = par.n;
 if par.batch
     d = getGlobald();
@@ -17,15 +17,18 @@ psi = zeros(1,n);
 for i = 1:n
     psi(i) = sum(phi(1:i));
 end
+%segment lengths
+Ta = xSol(n+2 : 2*(n+1)-1);
+L = Lfun(Ta,L0,par.c);
 % global X coordinates
 X = zeros(1,n+1);
 for i = 1:n
-    X(i+1)= sum(L.*sin(psi(1:i)));
+    X(i+1)= sum(L(1:i).*sin(psi(1:i)));
 end
 % global Y coordinates
 Y = zeros(1,n+1);
 for i = 1:n
-    Y(i+1)= sum(L.*cos(psi(1:i)));
+    Y(i+1)= sum(L(1:i).*cos(psi(1:i)));
 end
 % coordinates for drawing the contact thingies
 s.x = [0 0];
@@ -77,11 +80,11 @@ for j = 1:length(tSol)
     end
     % global X coordinates
     for i = 1:n
-        X(i+1)= sum(L.*sin(psi(1:i)));
+        X(i+1)= sum(L(1:i).*sin(psi(1:i)));
     end
     % global Y coordinates
     for i = 1:n
-        Y(i+1)= sum(L.*cos(psi(1:i)));
+        Y(i+1)= sum(L(1:i).*cos(psi(1:i)));
     end
     for i = 1:n
         % coordinates of the segment endpoints

@@ -35,10 +35,10 @@ phi_a = x(1:n+1);
 % approximate orientations
 psi_a = getPsi(phi_a);
 % vertical positions of contact points
-Yc_a = getYc(psi_a);
+Yc_a = getYc(psi_a, x(n+2:2*n+1));
 % guess the contact points
 ma = max(Yc_a);
-contact_bw = 0.2;
+contact_bw = 0.20;
 mi = ma - contact_bw;
 % first guess
 contact_guess = find(Yc_a <= ma & Yc_a >= mi);
@@ -71,7 +71,7 @@ while cn <= length(contact_guess_half)
             % check overlap
             phi = x(1:n+1);
             psi = getPsi(phi);
-            Yc = getYc(psi);
+            Yc = getYc(psi,x(n+2:2*n+1));
             overlap = find(round(Yc,3) > (D/2+par.h-d));
             if isempty(overlap)
                 disp('No overlap.')
@@ -116,7 +116,7 @@ Fysol = [];
 if ~isempty(contacts)
     Fysol = x(3*(n+1)+1:end);
 end
-
+L = Lfun(Tasol,par.L,par.c);
 [deformed_joints, deformed_pins] = deformedShape3D(phisol);
 
 drawSurface(deformed_joints, deformed_pins);
@@ -136,17 +136,18 @@ for j = 1:n
 end
 end
 %=========================================================================
-function Yc = getYc(psi)
+function Yc = getYc(psi,Ta)
 par = param();
 n = par.n;
-L = par.L;
+L0 = par.L;
+L = Lfun(Ta,L0,par.c);
 h = par.h;
 Yc = zeros(1,n);
 for i = 1:n
     % joint Y coordinate
-    Y = sum(L.*cos(psi(1:i-1)));
+    Y = sum(L(1:i-1).*cos(psi(1:i-1)));
     % contact point
-    Yc(i) = Y + L/2*cos(psi(i)) + h*cos(psi(i)-pi/2);
+    Yc(i) = Y + L(i)/2*cos(psi(i)) + h*cos(psi(i)-pi/2);
 end
 end
 %=========================================================================

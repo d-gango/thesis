@@ -9,7 +9,7 @@ if par.batch
 else
     d = par.d(0);
 end
-L = par.L;
+L0 = par.L;
 kt = par.k;
 h = par.h;
 mu = par.mu;
@@ -27,6 +27,8 @@ psi = zeros(1,n);
 for j = 1:n
     psi(j) = sum(phivector(1:j));
 end
+% segment length
+L = Lfun(Tavector(1:n),L0,par.c);
 
 % iterate the segments
 for i = 1:n
@@ -65,13 +67,13 @@ for i = 1:n
         % equations with contact point
         eqx = Ta + Tb + Cx;
         eqy = Na + Nb + Cy - par.p*par.A(i);
-        eqt = Ma + Mb + L*Nb + h*Cx + L/2*Cy - L/2*par.p*par.A(i);
+        eqt = Ma + Mb + L(i)*Nb + h*Cx + L(i)/2*Cy - L(i)/2*par.p*par.A(i);
         
     else
         % equations with no cotact poit
         eqx = Ta + Tb;
         eqy = Na + Nb - par.p*par.A(i);
-        eqt = Ma + Mb + L*Nb - L/2*par.p*par.A(i);
+        eqt = Ma + Mb + L(i)*Nb - L(i)/2*par.p*par.A(i);
     end
     
     % save equations
@@ -88,9 +90,9 @@ eq = [eq, eqangle, eqX, eqY];
 
 for k = contacts
     % global Y coordinate
-    Yk= sum(L.*cos(psi(1:k-1)));
+    Yk= sum(L(1:k-1).*cos(psi(1:k-1)));
     % Y coordinate of contact point
-    Yck = Yk + L/2*cos(psi(k)) + h*cos(psi(k)-pi/2);
+    Yck = Yk + L(k)/2*cos(psi(k)) + h*cos(psi(k)-pi/2);
     % the constraint equation
     eqcont = D/2 + h - d - Yck;
     % save constraint

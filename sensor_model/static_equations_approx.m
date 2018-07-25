@@ -9,7 +9,7 @@ if par.batch
 else
     d = par.d(0);
 end
-L = par.L;
+L0 = par.L;
 kt = par.k;
 h = par.h;
 mu = par.mu;
@@ -28,6 +28,8 @@ psi = zeros(1,n);
 for j = 1:n
     psi(j) = sum(phivector(1:j));
 end
+% segment length
+L = Lfun(Tavector(1:n),L0,par.c);
 
 % iterate the segments
 for i = 1:n
@@ -54,9 +56,9 @@ for i = 1:n
     Nb = -(Ta_next*sin(phi_next) + Na_next*cos(phi_next));
 
     % global Y coordinate
-    Y= sum(L.*cos(psi(1:i-1)));
+    Y= sum(L(1:i-1).*cos(psi(1:i-1)));
     % Y coordinate of contact point
-    Yc = Y + L/2*cos(psi(i)) + h*cos(psi(i)-pi/2);
+    Yc = Y + L(i)/2*cos(psi(i)) + h*cos(psi(i)-pi/2);
     % distance from contact surface
     delta = (D/2+h-d)-Yc;
     % give an approximation for the contact force
@@ -70,7 +72,7 @@ for i = 1:n
     % equations with contact point    pressure added!
     eqx = Ta + Tb + Cx;
     eqy = Na + Nb + Cy - par.p*par.A(i);
-    eqt = Ma + Mb + L*Nb + h*Cx + L/2*Cy - L/2*par.p*par.A(i);
+    eqt = Ma + Mb + L(i)*Nb + h*Cx + L(i)/2*Cy - L(i)/2*par.p*par.A(i);
 
     
     % save equations
