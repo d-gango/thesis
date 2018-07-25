@@ -124,10 +124,14 @@ Cbar = [zeros(n,length(h)); C.'];
 % K = subs(K,phid, zeros(size(phid)));
 % kbar = subs(kbar,phid, zeros(size(phid)));
 
+% constraint enforcement !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+f = C*phid;
+%!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
 A1 = C*(M\(C.'));
 A2 = (M\(-K+Q));
 A3 = (C*A2);
-A4 = -H-A3;
+A4 = -H-f-A3;
 
 % for simlicity, phid = 0 when liearising around a fixed point
 % A1 = subs(A1,phid, zeros(size(phid)));

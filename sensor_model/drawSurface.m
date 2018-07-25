@@ -9,6 +9,7 @@ zlin = linspace(min(z), max(z), 50);
 [X,Z] = meshgrid(xlin, zlin);
 
 Y = griddata(x,-z,y,X,-Z,'natural');
+figure
 mesh(X,-Z,Y)
 %axis([-par.D/2 par.D/2 -par.D/2  par.D/2 -par.D/2 0]);
 % figure

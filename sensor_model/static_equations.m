@@ -64,14 +64,14 @@ for i = 1:n
         
         % equations with contact point
         eqx = Ta + Tb + Cx;
-        eqy = Na + Nb + Cy;
-        eqt = Ma + Mb + L*Nb + h*Cx + L/2*Cy;
+        eqy = Na + Nb + Cy - par.p*par.A(i);
+        eqt = Ma + Mb + L*Nb + h*Cx + L/2*Cy - L/2*par.p*par.A(i);
         
     else
         % equations with no cotact poit
         eqx = Ta + Tb;
-        eqy = Na + Nb;
-        eqt = Ma + Mb + L*Nb;
+        eqy = Na + Nb - par.p*par.A(i);
+        eqt = Ma + Mb + L*Nb - L/2*par.p*par.A(i);
     end
     
     % save equations
@@ -92,7 +92,7 @@ for k = contacts
     % Y coordinate of contact point
     Yck = Yk + L/2*cos(psi(k)) + h*cos(psi(k)-pi/2);
     % the constraint equation
-    eqcont = D/2 - d - Yck;
+    eqcont = D/2 + h - d - Yck;
     % save constraint
     eq = [eq, eqcont];
 end

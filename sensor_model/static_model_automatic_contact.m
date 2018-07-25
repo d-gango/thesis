@@ -38,7 +38,7 @@ psi_a = getPsi(phi_a);
 Yc_a = getYc(psi_a);
 % guess the contact points
 ma = max(Yc_a);
-contact_bw = 0.15;
+contact_bw = 0.2;
 mi = ma - contact_bw;
 % first guess
 contact_guess = find(Yc_a <= ma & Yc_a >= mi);
@@ -72,7 +72,7 @@ while cn <= length(contact_guess_half)
             phi = x(1:n+1);
             psi = getPsi(phi);
             Yc = getYc(psi);
-            overlap = find(round(Yc,3) > (D/2-d));
+            overlap = find(round(Yc,3) > (D/2+par.h-d));
             if isempty(overlap)
                 disp('No overlap.')
                 % check negative contact forces
@@ -123,6 +123,9 @@ drawSurface(deformed_joints, deformed_pins);
 % hold on
 %fmesh(@(x,y) -par.D/2 + par.d(0))
 
+
+% compare to measurement data
+[quad_error, displacement_rel_error] = compareToMeasurement(x,par.d(0));
 
 %=========================================================================
 function psi = getPsi(phi)

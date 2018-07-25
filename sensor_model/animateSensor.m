@@ -51,7 +51,7 @@ end
 figure
 line([0 D], [0 0], 'Color', 'k') % sensor base
 hold on
-line([-10 D+10], [-D/2+d -D/2+d], 'Color', 'k') % contact surface
+line([-10 D+10], [-D/2-h+d -D/2-h+d], 'Color', 'k') % contact surface
 sensorplot = plot(X,-Y, 'LineWidth', 2); % sensor
 for i = 1:n
     if ismember(i,contacts)

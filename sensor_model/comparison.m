@@ -4,13 +4,14 @@ close all
 load('static_20_thick.mat');
 % load measurement data
 measurement_data = getMeasurementData();
+par = param();
 % get interpolation functions
 [fx, fy] = getInterpolatingFun();
 
 % generate 2D data from simulation
 for i = 1:length(measurement_data)
     % get 3D pin coordinates
-    [deformed_joints, deformed_pins] = deformedShape3D(solutions(i).sol(1:21));
+    [deformed_joints, deformed_pins] = deformedShape3D(solutions(i).sol(1:par.n+1));
     simulation_data{i} = ...
         [fx(deformed_pins(1,:), deformed_pins(2,:), deformed_pins(3,:));...
         fy(deformed_pins(1,:), deformed_pins(2,:), deformed_pins(3,:))];

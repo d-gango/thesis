@@ -58,7 +58,7 @@ for i = 1:n
     % Y coordinate of contact point
     Yc = Y + L/2*cos(psi(i)) + h*cos(psi(i)-pi/2);
     % distance from contact surface
-    delta = (D/2-d)-Yc;
+    delta = (D/2+h-d)-Yc;
     % give an approximation for the contact force
     Fy = epsilon*exp(-delta/epsilon);
     % the global horizontal component Fx = f(Fy)
@@ -67,10 +67,10 @@ for i = 1:n
     Cx = Fx*cos(psi(i)- pi/2) - Fy*sin(psi(i) -pi/2);
     Cy = Fx*sin(psi(i) -pi/2) + Fy*cos(psi(i) -pi/2);
     
-    % equations with contact point
+    % equations with contact point    pressure added!
     eqx = Ta + Tb + Cx;
-    eqy = Na + Nb + Cy;
-    eqt = Ma + Mb + L*Nb + h*Cx + L/2*Cy;
+    eqy = Na + Nb + Cy - par.p*par.A(i);
+    eqt = Ma + Mb + L*Nb + h*Cx + L/2*Cy - L/2*par.p*par.A(i);
 
     
     % save equations
