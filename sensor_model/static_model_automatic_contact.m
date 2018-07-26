@@ -116,8 +116,8 @@ Fysol = [];
 if ~isempty(contacts)
     Fysol = x(3*(n+1)+1:end);
 end
-L = Lfun(Tasol,par.L,par.c);
-[deformed_joints, deformed_pins] = deformedShape3D(phisol);
+L = Lfun(Tasol(1:n),par.L,par.c);
+[deformed_joints, deformed_pins] = deformedShape3D(phisol,L,Tasol(1:n));
 
 drawSurface(deformed_joints, deformed_pins);
 % hold on
@@ -125,7 +125,7 @@ drawSurface(deformed_joints, deformed_pins);
 
 
 % compare to measurement data
-[quad_error, displacement_rel_error] = compareToMeasurement(x,par.d(0));
+[quad_error, displacement_rel_error] = compareToMeasurement(phisol, Tasol(1:n), L ,par.d(0));
 
 %=========================================================================
 function psi = getPsi(phi)

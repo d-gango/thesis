@@ -2,12 +2,12 @@ function par = param()
 par.n = 20;  % number of segments
 par.epsilon = 0.06; % parameter for contact force approximation
 par.v = @(t) 2*heaviside(t-0.1);  % relative velocity of contact surface
-par.d = @(t) 5;  % contact depth
+par.d = @(t) 3;  % contact depth
 
 par.batch = 0; % set to 1 for batch run
 par.offset = 1; % springs relaxed in equilibrium
 
-par.p = 0; % pressure inside
+par.p = 0.5; % pressure inside
 par.D = 38.5;  % sensor diameter
 par.m = 100/par.n;  % mass of one segment
 par.L = par.D*sin(pi/(2*par.n)); % length of one segment
@@ -18,7 +18,7 @@ par.b(1) = 2*par.b(1); par.b(end) = par.b(1);
 par.theta = 1/12*par.m*par.L^2; % moment of inertia
 par.h = 0.5;  % length of perpendicular contact part
 par.mu = 0.5; % sliding friction coeff.
-par.c = 1/10000;
+par.c = ones(1,par.n) * 1/10000;
 
 phi_r = ones(1,par.n+1)*pi/par.n;  % relaxed state angles
 phi_r(1) = phi_r(1)/2;
@@ -30,7 +30,7 @@ par.A = par.D/2 * par.L * pi * abs(cos(psi_r(1:par.n)));
 
 % new kt calculation
 par.t = 1; % thickness [mm]
-par.E = 50000; % Young's modulus [kPa]
+par.E = 45000; % Young's modulus [kPa]
 psi_r = getPsi(par.phi_r);
 y = zeros(1,par.n+1);
 for i = 2:par.n+1
@@ -45,6 +45,7 @@ for i=1:par.n/2
 end
 kt = (par.E .* w .* par.t^3) ./ (12*par.L);
 par.k = [kt, kt(end), flip(kt)];
-
+c = par.L ./ (w .* par.t .* par.E);
+par.c = [c, flip(c)];
 end
 %===================================================================

@@ -1,4 +1,4 @@
-function [deformed_joints, deformed_pins] = deformedShape3D(phisol)
+function [deformed_joints, deformed_pins] = deformedShape3D(phisol, L, Tasol)
 pins = getPinData();
 par = param();
 % calculate joint coordinates
@@ -6,8 +6,8 @@ psi = getPsi(phisol);
 joints = zeros(3,par.n+1);
 joints(1,1) = -par.D/2;
 for i = 2:par.n+1
-    joints(1,i) = joints(1,i-1) + par.L*sin(psi(i-1));
-    joints(2,i) = joints(2,i-1) - par.L*cos(psi(i-1));
+    joints(1,i) = joints(1,i-1) + L(i-1)*sin(psi(i-1));
+    joints(2,i) = joints(2,i-1) - L(i-1)*cos(psi(i-1));
 end
 % generate 3D joint coordinates
 deformed_joints = [];
@@ -18,7 +18,7 @@ for i = 1:res-1
     T = rotationVectorToMatrix(d_alpha(i) * [0 1 0]);
     deformed_joints = [deformed_joints, T*joints];
 end
-%drawSurface(deformed_joints)
+% drawSurface(deformed_joints)
     
 deformed_pins = zeros(3,length(pins.alpha));
 for i = 1:length(pins.alpha)
@@ -30,8 +30,12 @@ for i = 1:length(pins.alpha)
     T = rotationVectorToMatrix(-(phisol(ind)-par.phi_r(ind)) * [0  0 1]);
 %     plot(joints(1,:), joints(2,:), '-o')
 %     axis equal; hold on
-    deformed_planar_coordinates = ...
-        joints(:,ind) + T*[pins.position_vector(:,i);0];
+
+    % elongate pin's relative position in accordance with the segment
+    % elongation
+    rho = [Lfun(Tasol(ind), pins.position_vector(1,i), par.c(ind));...
+           pins.position_vector(2,i)];
+    deformed_planar_coordinates = joints(:,ind) + T*[rho;0];
 %     scatter(deformed_planar_coordinates(1), deformed_planar_coordinates(2))
     R = rotationVectorToMatrix(pins.alpha(i) * [0 1 0]);
     deformed_pins(:,i) = R * deformed_planar_coordinates;

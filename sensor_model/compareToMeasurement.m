@@ -1,4 +1,4 @@
-function [quad_error, displacement_rel_error]= compareToMeasurement(sol,d)
+function [quad_error, displacement_rel_error]= compareToMeasurement(phisol, Tasol, L, d)
 % load measurement data
 measurement_data = getMeasurementData();
 par = param();
@@ -12,7 +12,7 @@ index = d/0.1 +1;
 % generate 2D data from simulation
 for i = 1:length(d)
     % get 3D pin coordinates
-    [deformed_joints, deformed_pins] = deformedShape3D(sol(i,1:par.n+1));
+    [deformed_joints, deformed_pins] = deformedShape3D(phisol, L, Tasol);
     simulation_data{i} = ...
         [fx(deformed_pins(1,:), deformed_pins(2,:), deformed_pins(3,:));...
         fy(deformed_pins(1,:), deformed_pins(2,:), deformed_pins(3,:))];
