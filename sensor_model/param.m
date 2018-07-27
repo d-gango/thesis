@@ -2,7 +2,7 @@ function par = param()
 par.n = 10;  % number of segments
 par.epsilon = 0.06; % parameter for contact force approximation
 par.v = @(t) 0;  % relative velocity of contact surface
-par.d = @(t) t;  % contact depth
+par.d = @(t) 0;  % contact depth
 
 par.batch = 0; % set to 1 for batch run
 par.offset = 1; % springs relaxed in equilibrium

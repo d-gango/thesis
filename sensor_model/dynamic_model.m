@@ -54,9 +54,9 @@ end
 kt = sym('kt', [1, n+1]);
 U = 0;
 for i = 1:n
-    U = U + 1/2*kt(i)*phi_t(i)^2;
+    U = U + 1/2*kt(i)*(phi_t(i)-par.phi_r(i))^2;
 end
-U = U + 1/2*kt(end)*(pi-sum(phi_t))^2;
+U = U + 1/2*kt(end)*(pi-sum(phi_t)-par.phi_r(end))^2;
 
 % dissipative potential
 b = sym('b', [1, n+1]);
