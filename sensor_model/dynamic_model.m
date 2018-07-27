@@ -131,18 +131,6 @@ for j = 1:n % generalized forces
     end
 end
 
-
-% first order ODE eq of motion matrices
-Mbar = sym('m',[2*n,2*n]);
-Mbar(1:n,n+1:2*n) = zeros(n,n);
-Mbar(n+1:2*n,1:n) = zeros(n,n);
-Mbar(1:n,1:n) = eye(n);
-Mbar(n+1:2*n,n+1:2*n) = M;
-kbar = [-phid;K];
-Qbar = [zeros(n,1); Q];
-Cbar = [zeros(n,length(c)); C.'];
-
-save('eq_of_motion_data.mat','M','C','K','Q','H','Mbar','Cbar','kbar','Qbar');
 toc
 %% substitute constants
 tic
@@ -164,8 +152,19 @@ params_num = [D_num;m_num;L_num;k_num';b_num';theta_num;...
               h_num;mu_num;epsilon_num];
 vd_sym = [v;d];
 
-save('eq_of_motion_data.mat','params','params_num','phi','phid','vd_sym',...
-     '-append');
+Msub = subs(M,params,params_num);
+Csub = subs(C,params,params_num);
+Ksub = subs(K,params,params_num);
+Qsub = subs(Q,params,params_num);
+Hsub = subs(H,params,params_num);
+
+Mfun = matlabFunction(Msub);
+Cfun = matlabFunction(Csub);
+Kfun = matlabFunction(Ksub);
+Qfun = matlabFunction(Qsub);
+Hfun = matlabFunction(Hsub);
+
+save('eq_of_motion_data.mat','Mfun','Cfun','Kfun','Qfun','Hfun');
 toc
 %% solve ODE
 tic
@@ -183,9 +182,9 @@ phi0 = x(1:n);
 toc
 
 % modify IC
-phi0(1) = phi0(1);
+%phi0(1) = phi0(1)+0.05;
 init = get_dynamic_IC(phi0);
-animateSensor(0,init); title('initial shape');
+animateSensor(0,[init(1:n),x(n+1:end)]); title('initial shape');
 % dynamic simulation
 tspan = linspace(0, 5, 100);
 options = odeset('RelTol',1e-6,'AbsTol',1e-8, 'BDF', 'on');
