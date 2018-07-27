@@ -49,17 +49,18 @@ for i = 1:n
     T = T + 1/2*m*(xd(i)^2 + yd(i)^2) + 1/2*theta*omega(i)^2;
 end
 
+% relaxed state angles
+phi_r = ones(1,n+1)*pi/n;
+phi_r(1) = phi_r(1)/2;
+phi_r(end) = phi_r(end)/2;
+
 %potential energy
 syms k
 U = 0;
 for i = 1:n
-    if i == 1
-        U = U + k*phi_t(i)^2;  % double spring stiffness
-    else
-    U = U + 1/2*k*phi_t(i)^2;
-    end
+    U = U + k/2*(phi_t(i)-phi_r(i))^2;
 end
-U = U + k*(pi-sum(phi_t))^2;  % double spring stiffness
+U = U + k/2*(pi-sum(phi_t)-phi_r(end))^2;
 
 % dissipative potential
 syms b
@@ -125,7 +126,7 @@ Cbar = [zeros(n,length(h)); C.'];
 % kbar = subs(kbar,phid, zeros(size(phid)));
 
 % constraint enforcement !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-f = C*phid;
+f = 0*C*phid;
 %!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 A1 = C*(M\(C.'));
@@ -143,7 +144,7 @@ xdot = Mbar\(-kbar + Qbar + Cbar*lambda);
 toc
 %% substitute constants and generate function handle
 % substitute the numerical values
-D_num = 40;
+D_num = 38.5;
 m_num = 100/n;
 L_num = D_num*sin(pi/(2*n));
 k_num = 10000;
