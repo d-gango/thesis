@@ -112,7 +112,7 @@ for k = 1:n   % external forces and positions where they're applied
     % position of contact point
     Xc(k) = x(k) + h*sin(sum(phi(1:k)) - pi/2); 
     Yc(k) = y(k) - h*cos(sum(phi(1:k)) - pi/2);
-    delta(k) = Yc(k) + Diam/2 - d; % distance from contact surface
+    delta(k) = Yc(k) + Diam/2 + h - d; % distance from contact surface
     Fy(k) = epsilon * exp(-delta(k)/epsilon); % global normal contact force
     Fx(k) = mu*Fy(k)*tanh(10*(v-diff(Xc(k)))); % global friction force
 end
