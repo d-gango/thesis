@@ -107,7 +107,7 @@ C = jacobian(c,phi);
 H = jacobian(C*phid, phi)*phid;
 
 % contact force calculation
-syms h d epsilon v_ext a bb c mu_star R t_ss
+syms h d epsilon v_ext a bb c mu_star R t_ss V_star
 mu = sym('mu', [n,1]);
 phi_bar = sym('phi_bar', [n,1]);
 for k = 1:n   % external forces and positions where they're applied
@@ -118,7 +118,8 @@ for k = 1:n   % external forces and positions where they're applied
     Fy(k) = epsilon * exp(-delta(k)/epsilon); % global normal contact force
     
     % friction force
-    v = v_ext;% - diff(Xc(k));
+    v_bar = v_ext;% - diff(Xc(k));
+    v = v_bar / V_star;
     mu(k) = a*asinh(v/2*exp(mu_star+bb*log(c+phi_bar(k))/a));
     Fx(k) = mu(k)*Fy(k);
     % evolution of contact surface roughness
@@ -163,12 +164,13 @@ c_num = par.c;
 mu_star_num = par.mu_star;
 R_num = par.R;
 t_ss_num = par.t_ss;
+V_star_num = par.V_star;
 
-params = [Diam;m;L;kt.';b.';theta;h;epsilon;a;bb;c;mu_star;R;t_ss];
+params = [Diam;m;L;kt.';b.';theta;h;epsilon;a;bb;c;mu_star;R;t_ss;V_star];
 params_num = [D_num;m_num;L_num;k_num';b_num';theta_num;...
               h_num;epsilon_num;a_num;bb_num;c_num;...
-              mu_star_num;R_num;t_ss_num];
-vd_sym = [v_ext;d];
+              mu_star_num;R_num;t_ss_num;V_star_num];
+
 
 Msub = subs(M,params,params_num);
 Csub = subs(C,params,params_num);
@@ -176,6 +178,9 @@ Ksub = subs(K,params,params_num);
 Qsub = subs(Q,params,params_num);
 Hsub = subs(H,params,params_num);
 phi_bardotsub = subs(phi_bardot,params,params_num);
+Fxsub = subs(Fx,params,params_num);
+Fysub = subs(Fy,params,params_num);
+musub = subs(mu,params,params_num);
 
 Mfun = matlabFunction(Msub);
 Cfun = matlabFunction(Csub);
@@ -183,6 +188,9 @@ Kfun = matlabFunction(Ksub);
 Qfun = matlabFunction(Qsub);
 Hfun = matlabFunction(Hsub);
 phi_bardotfun = matlabFunction(phi_bardotsub);
+Fxfun = matlabFunction(Fxsub);
+Fyfun = matlabFunction(Fysub);
+mufun = matlabFunction(musub);
 
 save('eq_of_motion_data.mat','Mfun','Cfun','Kfun','Qfun','Hfun','phi_bardotfun');
 toc
@@ -190,10 +198,11 @@ toc
 tic
 % start from underformed shape
 init = [par.phi_r(1:par.n), zeros(1,par.n), ones(1,par.n)];
+%load init.mat
 % dynamic simulation
-tspan = linspace(0, 5, 100);
+tspan = linspace(0, 10, 200);
 options = odeset('RelTol',1e-6,'AbsTol',1e-8, 'BDF', 'on');
-[t,Y] = ode45(@eq_of_motion,tspan,init');
+[t,Y] = ode15s(@eq_of_motion,tspan,init');
 toc
 %% animation
 % Calculating joint coordinates for animation purposes
@@ -288,4 +297,20 @@ end
 
 % % Create animated GIF
 % imwrite(mov, map, 'animation.gif', 'Delaytime', 0, 'LoopCount', inf)
+
+%% calculate forces and friction coeffitient
+Fxval = zeros(length(t),par.n);
+Fyval = zeros(length(t),par.n);
+muval = zeros(length(t),par.n);
+for i = 1:length(t)
+Fxarg = num2cell([par.d(t(i)), Y(i,1:par.n), Y(i,2*par.n+1:end), par.v(t(i))]);
+Fyarg = num2cell([par.d(t(i)), Y(i,1:par.n)]);
+muarg = num2cell([Y(i,2*par.n+1:end), par.v(t(i))]);
+
+Fxval(i,:) = Fxfun(Fxarg{:})';
+Fyval(i,:) = Fyfun(Fyarg{:})';
+muval(i,:) = mufun(muarg{:})';
+Fxsum(i) = sum(Fxval(i,:));
+Fysum(i) = sum(Fyval(i,:));
+end
 
