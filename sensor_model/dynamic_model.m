@@ -107,21 +107,32 @@ C = jacobian(c,phi);
 H = jacobian(C*phid, phi)*phid;
 
 % contact force calculation
-syms h d epsilon v mu
+syms h d epsilon v_ext a bb c mu_star R t_ss
+mu = sym('mu', [n,1]);
+phi_bar = sym('phi_bar', [n,1]);
 for k = 1:n   % external forces and positions where they're applied
     % position of contact point
     Xc(k) = x(k) + h*sin(sum(phi(1:k)) - pi/2); 
     Yc(k) = y(k) - h*cos(sum(phi(1:k)) - pi/2);
     delta(k) = Yc(k) + Diam/2 + h - d; % distance from contact surface
     Fy(k) = epsilon * exp(-delta(k)/epsilon); % global normal contact force
-    Fx(k) = mu*Fy(k)*tanh(10*(v-diff(Xc(k)))); % global friction force
+    
+    % friction force
+    v = v_ext;% - diff(Xc(k));
+    mu(k) = a*asinh(v/2*exp(mu_star+bb*log(c+phi_bar(k))/a));
+    Fx(k) = mu(k)*Fy(k);
+    % evolution of contact surface roughness
+    phi_bardot(k) = -(1+R*v)/t_ss * sinh((R*v*phi_bar(k)-(1+R-phi_bar(k)))/(1+R*v));
 end
+
+
 % get rid of (t)
 Xc = subs(Xc.', [phi_t; phid_t], [phi; phid]);
 Yc = subs(Yc.', [phi_t; phid_t], [phi; phid]);
 delta = subs(delta.', [phi_t; phid_t], [phi; phid]);
 Fx = subs(Fx.', [phi_t; phid_t], [phi; phid]);
 Fy = subs(Fy.', [phi_t; phid_t], [phi; phid]);
+phi_bardot = subs(phi_bardot.', [phi_t; phid_t], [phi; phid]);
 
 Q = sym('Q', [n,1]);
 for j = 1:n % generalized forces
@@ -142,49 +153,43 @@ k_num = par.k;
 b_num = par.b;
 theta_num = par.theta;
 h_num = par.h;
-mu_num = par.mu;
 d_num = par.d;
 
 epsilon_num = par.epsilon;
 
-params = [Diam;m;L;kt.';b.';theta;h;mu;epsilon];
+a_num = par.a;
+bb_num = par.bb;
+c_num = par.c;
+mu_star_num = par.mu_star;
+R_num = par.R;
+t_ss_num = par.t_ss;
+
+params = [Diam;m;L;kt.';b.';theta;h;epsilon;a;bb;c;mu_star;R;t_ss];
 params_num = [D_num;m_num;L_num;k_num';b_num';theta_num;...
-              h_num;mu_num;epsilon_num];
-vd_sym = [v;d];
+              h_num;epsilon_num;a_num;bb_num;c_num;...
+              mu_star_num;R_num;t_ss_num];
+vd_sym = [v_ext;d];
 
 Msub = subs(M,params,params_num);
 Csub = subs(C,params,params_num);
 Ksub = subs(K,params,params_num);
 Qsub = subs(Q,params,params_num);
 Hsub = subs(H,params,params_num);
+phi_bardotsub = subs(phi_bardot,params,params_num);
 
 Mfun = matlabFunction(Msub);
 Cfun = matlabFunction(Csub);
 Kfun = matlabFunction(Ksub);
 Qfun = matlabFunction(Qsub);
 Hfun = matlabFunction(Hsub);
+phi_bardotfun = matlabFunction(phi_bardotsub);
 
-save('eq_of_motion_data.mat','Mfun','Cfun','Kfun','Qfun','Hfun');
+save('eq_of_motion_data.mat','Mfun','Cfun','Kfun','Qfun','Hfun','phi_bardotfun');
 toc
 %% solve ODE
 tic
-% calculate static deformed shape
-% use relaxed state as initial condition
-x0 = zeros(1,(n+1)*3);
-x0(1:n+1) = par.phi_r;
-options = optimoptions('fsolve','MaxFunctionEvaluations',80000,...
-                        'MaxIterations', 5000);
-[x, fval, exitflag] = fsolve(@static_equations_approx, x0, options);
-if exitflag < 0
-    error('No initial deformed shape found!');
-end
-phi0 = x(1:n);
-toc
-
-% modify IC
-%phi0(1) = phi0(1)+0.05;
-init = get_dynamic_IC(phi0);
-animateSensor(0,[init(1:n),x(n+1:end)]); title('initial shape');
+% start from underformed shape
+init = [par.phi_r(1:par.n), zeros(1,par.n), ones(1,par.n)];
 % dynamic simulation
 tspan = linspace(0, 5, 100);
 options = odeset('RelTol',1e-6,'AbsTol',1e-8, 'BDF', 'on');
@@ -284,25 +289,3 @@ end
 % % Create animated GIF
 % imwrite(mov, map, 'animation.gif', 'Delaytime', 0, 'LoopCount', inf)
 
-%% check total energy
-phid_t = diff(phi_t);
-syms L
-kin = subs(T, [m,L,b,kt,theta], [m_num,L_num,b_num,k_num,theta_num]);
-pot = subs(U, [m,L,b,kt,theta], [m_num,L_num,b_num,k_num,theta_num]);
-total_energy = zeros(length(t),1);
-for i = 1:length(t)
-    total_energy(i) = double(subs(kin+pot, [phi_t; phid_t], Y(i,:)'));
-end
-energy_fluctuation = max(total_energy) - min(total_energy);
-rel_energy_fluctuation = energy_fluctuation / total_energy(1);
-disp(['Energy fluctuation: ', num2str(rel_energy_fluctuation*100), ' %'])
-
-figure
-plot(t, total_energy)
-title('Total energy')
-
-%%
-% accel = zeros(length(t),2*n);
-% for i = 1:length(t)
-%     accel(i,:) = odefun(t(i), Y(i,:)');
-% end

@@ -1,7 +1,7 @@
 function par = param()
 par.n = 10;  % number of segments
 par.epsilon = 0.06; % parameter for contact force approximation
-par.v = @(t) 3;  % relative velocity of contact surface
+par.v = @(t) t;  % relative velocity of contact surface
 par.d = @(t) 3;  % contact depth
 
 par.batch = 0; % set to 1 for batch run
@@ -19,6 +19,14 @@ par.theta = 1/12*par.m*par.L^2; % moment of inertia
 par.h = 0.5;  % length of perpendicular contact part
 par.mu = 0.5; % sliding friction coeff.
 par.c = 0;%ones(1,par.n) * 1/10000;
+
+% rate-and-state constants
+par.a = 0.0349;
+par.bb = 0.0489;
+par.c = 0.001;
+par.mu_star = 0.369;
+par.R = 100;
+par.t_ss = 90;
 
 phi_r = ones(1,par.n+1)*pi/par.n;  % relaxed state angles
 phi_r(1) = phi_r(1)/2;
