@@ -157,12 +157,16 @@ Csub = subs(C,params,params_num);
 Ksub = subs(K,params,params_num);
 Qsub = subs(Q,params,params_num);
 Hsub = subs(H,params,params_num);
+Fxsub = subs(Fx,params,params_num);
+Fysub = subs(Fy,params,params_num);
 
 Mfun = matlabFunction(Msub);
 Cfun = matlabFunction(Csub);
 Kfun = matlabFunction(Ksub);
 Qfun = matlabFunction(Qsub);
 Hfun = matlabFunction(Hsub);
+Fxfun = matlabFunction(Fxsub);
+Fyfun = matlabFunction(Fysub);
 
 save('eq_of_motion_data.mat','Mfun','Cfun','Kfun','Qfun','Hfun');
 toc
@@ -182,11 +186,12 @@ phi0 = x(1:n);
 toc
 
 % modify IC
-%phi0(1) = phi0(1)+0.05;
-init = get_dynamic_IC(phi0);
+% phi0(1) = phi0(1)+0.05;
+% init = get_dynamic_IC(phi0);
+load init.mat
 animateSensor(0,[init(1:n),x(n+1:end)]); title('initial shape');
 % dynamic simulation
-tspan = linspace(0, 5, 100);
+tspan = 0:0.01:6;
 options = odeset('RelTol',1e-6,'AbsTol',1e-8, 'BDF', 'on');
 [t,Y] = ode45(@eq_of_motion,tspan,init');
 toc
@@ -207,14 +212,18 @@ ang = Y(:,1:n);
 figure('Color', 'white')%,'units','normalized','position',[0 0 1 1])
 
 subplot(2,1,1)
-plot(t, ang, 'LineWidth', 2)
-colors = 'brygkmc';
+cmap = colormap(jet(n));
+for i = 1:n
+plot(t, ang(:,i), 'LineWidth', 2, 'Color', cmap(i,:))
+hold on
+end
+
 for i = 1:n
     hh1(i) = line(t(1), ang(1,i), 'Marker', '.', 'MarkerSize', 20, ...
         'Color', 'r');
 end
-xlabel('time (sec)')
-ylabel('angle (rad)')
+xlabel('t [s]')
+ylabel('relative angle [rad]')
 
 subplot(2,1,2)
 xplot = [0, x(1,1)];
@@ -225,17 +234,21 @@ if n > 1
         yplot(i,:) = [yplot(i-1,2), y(1,i)];
     end
 end
-for i = 1:n
-    hh2(i) = plot(xplot(i,:), yplot(i,:), '.-', 'MarkerSize', 20, 'LineWidth', 2);
-    hold on
-end
 % contact surface
 hh3 = line([-0.5*D_num 1.5*D_num],...
-    [-D_num/2+d_num(t(1)) -D_num/2+d_num(t(1))],'LineWidth',1,'Color','k');
+    [-D_num/2-h_num+d_num(t(1)) -D_num/2-h_num+d_num(t(1))],'LineWidth',1,'Color','k');
+hold on
+% top of sensor
+line([0,D_num], [0,0],'LineWidth',1,'Color','k');
+for i = 1:n
+    hh2(i) = plot(xplot(i,:), yplot(i,:), '.-', 'MarkerSize', 20, 'LineWidth', 2, ...
+        'Color', cmap(i,:));
+end
+
 hold off
 axis equal
 axis([-0.5*D_num 1.5*D_num -D_num 0.5*D_num])
-ht = title(sprintf('time: %0.2f sec', t(1)));
+ht = title(sprintf('t = %0.2f s', t(1)));
 
 
 % Get figure size
@@ -260,9 +273,9 @@ for id = 1:length(t)
             yplot(i,:) = [yplot(i-1,2), y(id,i)];
             set(hh2(i), 'XData', xplot(i,:), 'yData', yplot(i,:))
         end
-        set(ht, 'String', sprintf('time: %0.2f sec', t(id)))
+        set(ht, 'String', sprintf('t = %0.2f s', t(id)))
         set(hh3, 'XData', [-0.5*D_num 1.5*D_num],...
-                 'YData', [-D_num/2+d_num(t(id)) -D_num/2+d_num(t(id))]);
+                 'YData', [-D_num/2-h_num+d_num(t(id)) -D_num/2-h_num+d_num(t(id))]);
     end
     drawnow;
     pause(0.03)
@@ -280,29 +293,87 @@ end
 %     end
 % end
 
-
+% 
 % % Create animated GIF
 % imwrite(mov, map, 'animation.gif', 'Delaytime', 0, 'LoopCount', inf)
 
-%% check total energy
-phid_t = diff(phi_t);
-syms L
-kin = subs(T, [m,L,b,kt,theta], [m_num,L_num,b_num,k_num,theta_num]);
-pot = subs(U, [m,L,b,kt,theta], [m_num,L_num,b_num,k_num,theta_num]);
-total_energy = zeros(length(t),1);
+%% calculate forces and friction coeffitient
+Fxval = zeros(length(t),par.n);
+Fyval = zeros(length(t),par.n);
 for i = 1:length(t)
-    total_energy(i) = double(subs(kin+pot, [phi_t; phid_t], Y(i,:)'));
+Fxarg = num2cell([par.d(t(i)), Y(i,:), par.v(t(i))]);
+Fyarg = num2cell([par.d(t(i)), Y(i,1:par.n)]);
+
+Fxval(i,:) = Fxfun(Fxarg{:})';
+Fyval(i,:) = Fyfun(Fyarg{:})';
+
+Fxsum(i) = sum(Fxval(i,:));
+Fysum(i) = sum(Fyval(i,:));
 end
-energy_fluctuation = max(total_energy) - min(total_energy);
-rel_energy_fluctuation = energy_fluctuation / total_energy(1);
-disp(['Energy fluctuation: ', num2str(rel_energy_fluctuation*100), ' %'])
-
 figure
-plot(t, total_energy)
-title('Total energy')
+plot(t,Fxsum, 'LineWidth', 2);
+xlabel('t [s]'); ylabel('F_f [10^{-3} N]', 'Interpreter',  'tex');
+figure
+plot(t,Fysum, 'LineWidth', 2);
+xlabel('t [s]'); ylabel('F_n [10^{-3} N]', 'Interpreter',  'tex');
 
-%%
-% accel = zeros(length(t),2*n);
-% for i = 1:length(t)
-%     accel(i,:) = odefun(t(i), Y(i,:)');
-% end
+%% plots to save
+
+% relative angles
+figure
+for i = 1:n
+plot(t, ang(:,i), 'LineWidth', 2, 'Color', cmap(i,:))
+hold on
+end
+xlabel('t [s]')
+ylabel('relative angle [rad]')
+
+% relative angular velocities
+figure
+angvel = Y(:,n+1:2*n);
+for i = 1:n
+plot(t, angvel(:,i), 'LineWidth', 2, 'Color', cmap(i,:))
+hold on
+end
+xlabel('t [s]')
+ylabel('relative anglular velocity [rad/s]')
+
+% contact depth
+figure
+plot(t, par.d(t),'LineWidth', 2)
+xlabel('t [s]')
+ylabel('d [mm]')
+
+% relative velocity
+figure
+plot(t, par.v(t),'LineWidth', 2)
+xlabel('t [s]')
+ylabel('v [mm/s]')
+
+%% sensor shape
+figure
+k = find(t == 2.5);
+xplot = [0, x(k,1)];
+yplot = [0, y(k,1)];
+if n > 1
+    for i = 2:n
+        xplot(i,:) = [xplot(i-1,2), x(k,i)];
+        yplot(i,:) = [yplot(i-1,2), y(k,i)];
+    end
+end
+% contact surface
+hh3 = line([-0.5*D_num 1.5*D_num],...
+    [-D_num/2-h_num+d_num(t(k)) -D_num/2-h_num+d_num(t(k))],'LineWidth',1,'Color','k');
+hold on
+% top of sensor
+line([0,D_num], [0,0],'LineWidth',1,'Color','k');
+% segments
+for i = 1:n
+    hh2(i) = plot(xplot(i,:), yplot(i,:), '.-', 'MarkerSize', 20, 'LineWidth', 2, ...
+        'Color', cmap(i,:));
+end
+
+hold off
+axis equal
+axis([-0.5*D_num 1.5*D_num -D_num 0.5*D_num])
+ht = title(sprintf('t = %0.2f s', t(k)),'FontSize',16);
