@@ -4,6 +4,10 @@ par.epsilon = 0.06; % parameter for contact force approximation
 par.v = @(t) heaviside(t-1);  % relative velocity of contact surface
 par.d = @(t) 5;  % contact depth
 
+par.force_mode = 1;
+par.F_ext = 2000;
+par.m_surf = 0.1;
+
 par.batch = 0; % set to 1 for batch run
 par.offset = 1; % springs relaxed in equilibrium
 

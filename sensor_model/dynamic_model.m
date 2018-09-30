@@ -92,7 +92,7 @@ coef = flip(coef,2);
 M = coef(1:n,1:n);
 K = coef(:,end);
 
-% constraints 
+% constraints
 %  http://farside.ph.utexas.edu/teaching/336k/Newtonhtml/node90.html
 syms Diam
 xend = 0;
@@ -110,7 +110,7 @@ H = jacobian(C*phid, phi)*phid;
 syms h d epsilon v mu
 for k = 1:n   % external forces and positions where they're applied
     % position of contact point
-    Xc(k) = x(k) + h*sin(sum(phi(1:k)) - pi/2); 
+    Xc(k) = x(k) + h*sin(sum(phi(1:k)) - pi/2);
     Yc(k) = y(k) - h*cos(sum(phi(1:k)) - pi/2);
     delta(k) = Yc(k) + Diam/2 + h - d; % distance from contact surface
     Fy(k) = epsilon * exp(-delta(k)/epsilon); % global normal contact force
@@ -149,7 +149,7 @@ epsilon_num = par.epsilon;
 
 params = [Diam;m;L;kt.';b.';theta;h;mu;epsilon];
 params_num = [D_num;m_num;L_num;k_num';b_num';theta_num;...
-              h_num;mu_num;epsilon_num];
+    h_num;mu_num;epsilon_num];
 vd_sym = [v;d];
 
 Msub = subs(M,params,params_num);
@@ -168,7 +168,7 @@ Hfun = matlabFunction(Hsub);
 Fxfun = matlabFunction(Fxsub);
 Fyfun = matlabFunction(Fysub);
 
-save('eq_of_motion_data.mat','Mfun','Cfun','Kfun','Qfun','Hfun');
+save('eq_of_motion_data.mat','Mfun','Cfun','Kfun','Qfun','Hfun','Fxfun');
 toc
 %% solve ODE
 tic
@@ -177,7 +177,7 @@ tic
 x0 = zeros(1,(n+1)*3);
 x0(1:n+1) = par.phi_r;
 options = optimoptions('fsolve','MaxFunctionEvaluations',80000,...
-                        'MaxIterations', 5000);
+    'MaxIterations', 5000);
 [x, fval, exitflag] = fsolve(@static_equations_approx, x0, options);
 if exitflag < 0
     error('No initial deformed shape found!');
@@ -189,11 +189,14 @@ toc
 % phi0(1) = phi0(1)+0.05;
 % init = get_dynamic_IC(phi0);
 load init.mat
+if par.force_mode == 1
+    init = [init, 0, 0];
+end
 animateSensor(0,[init(1:n),x(n+1:end)]); title('initial shape');
 % dynamic simulation
-tspan = 0:0.01:6;
+tspan = 0:0.01:5;
 options = odeset('RelTol',1e-6,'AbsTol',1e-8, 'BDF', 'on');
-[t,Y] = ode45(@eq_of_motion,tspan,init');
+[t,Y] = ode15s(@eq_of_motion,tspan,init');
 toc
 %% animation
 % Calculating joint coordinates for animation purposes
@@ -214,8 +217,8 @@ figure('Color', 'white')%,'units','normalized','position',[0 0 1 1])
 subplot(2,1,1)
 cmap = colormap(jet(n));
 for i = 1:n
-plot(t, ang(:,i), 'LineWidth', 2, 'Color', cmap(i,:))
-hold on
+    plot(t, ang(:,i), 'LineWidth', 2, 'Color', cmap(i,:))
+    hold on
 end
 
 for i = 1:n
@@ -259,7 +262,7 @@ height = pos(4);
 
 % % Preallocate data (for storing frame data)
 % mov = zeros(height, width, 1, length(t), 'uint8');
-% 
+%
 % Loop through by changing XData and yData
 for id = 1:length(t)
     % Update graphics data. this is more efficient than recreating plots.
@@ -275,15 +278,15 @@ for id = 1:length(t)
         end
         set(ht, 'String', sprintf('t = %0.2f s', t(id)))
         set(hh3, 'XData', [-0.5*D_num 1.5*D_num],...
-                 'YData', [-D_num/2-h_num+d_num(t(id)) -D_num/2-h_num+d_num(t(id))]);
+            'YData', [-D_num/2-h_num+d_num(t(id)) -D_num/2-h_num+d_num(t(id))]);
     end
     drawnow;
     pause(0.03)
 end
-% 
+%
 %     % Get frame as an image
 %     f = getframe(gcf);
-% 
+%
 %     % Create a colormap for the first frame. For the rest of the frames,
 %     % use the same colormap
 %     if id == 1
@@ -293,7 +296,7 @@ end
 %     end
 % end
 
-% 
+%
 % % Create animated GIF
 % imwrite(mov, map, 'animation.gif', 'Delaytime', 0, 'LoopCount', inf)
 
@@ -301,14 +304,20 @@ end
 Fxval = zeros(length(t),par.n);
 Fyval = zeros(length(t),par.n);
 for i = 1:length(t)
-Fxarg = num2cell([par.d(t(i)), Y(i,:), par.v(t(i))]);
-Fyarg = num2cell([par.d(t(i)), Y(i,1:par.n)]);
-
-Fxval(i,:) = Fxfun(Fxarg{:})';
-Fyval(i,:) = Fyfun(Fyarg{:})';
-
-Fxsum(i) = sum(Fxval(i,:));
-Fysum(i) = sum(Fyval(i,:));
+    switch par.force_mode
+        case 0
+            Fxarg = num2cell([par.d(t(i)), Y(i,:), par.v(t(i))]);
+            Fyarg = num2cell([par.d(t(i)), Y(i,1:par.n)]);
+        case 1
+            Fxarg = num2cell([par.d(t(i)), Y(i,1:2*par.n), Y(i,end)]);
+            Fyarg = num2cell([par.d(t(i)), Y(i,1:par.n)]);
+    end
+    
+    Fxval(i,:) = Fxfun(Fxarg{:})';
+    Fyval(i,:) = Fyfun(Fyarg{:})';
+    
+    Fxsum(i) = sum(Fxval(i,:));
+    Fysum(i) = sum(Fyval(i,:));
 end
 figure
 plot(t,Fxsum, 'LineWidth', 2);
@@ -322,8 +331,8 @@ xlabel('t [s]'); ylabel('F_n [10^{-3} N]', 'Interpreter',  'tex');
 % relative angles
 figure
 for i = 1:n
-plot(t, ang(:,i), 'LineWidth', 2, 'Color', cmap(i,:))
-hold on
+    plot(t, ang(:,i), 'LineWidth', 2, 'Color', cmap(i,:))
+    hold on
 end
 xlabel('t [s]')
 ylabel('relative angle [rad]')
@@ -332,8 +341,8 @@ ylabel('relative angle [rad]')
 figure
 angvel = Y(:,n+1:2*n);
 for i = 1:n
-plot(t, angvel(:,i), 'LineWidth', 2, 'Color', cmap(i,:))
-hold on
+    plot(t, angvel(:,i), 'LineWidth', 2, 'Color', cmap(i,:))
+    hold on
 end
 xlabel('t [s]')
 ylabel('relative anglular velocity [rad/s]')
@@ -346,7 +355,12 @@ ylabel('d [mm]')
 
 % relative velocity
 figure
-plot(t, par.v(t),'LineWidth', 2)
+switch par.force_mode
+    case 0
+        plot(t, par.v(t),'LineWidth', 2)
+    case 1
+        plot(t, Y(:,end),'LineWidth', 2)
+end
 xlabel('t [s]')
 ylabel('v [mm/s]')
 
