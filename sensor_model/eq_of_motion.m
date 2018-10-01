@@ -28,7 +28,7 @@ switch par.force_mode
     case 0
         xdot = [x(par.n+1:end); M\(-K + Q + C.'*lambda)];
     case 1
-        xdot = [x(par.n+1:2*par.n); M\(-K + Q + C.'*lambda); x(end); (par.F_ext-Fxsum)/par.m_surf];
+        xdot = [x(par.n+1:2*par.n); M\(-K + Q + C.'*lambda); x(end); (par.F_ext+Fxsum)/par.m_surf];
 end
 
 disp(t)

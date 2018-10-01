@@ -35,7 +35,7 @@ for i = 2:n
     y(i) = y(i) - L/2*cos(sum(phi_t(1:i)));
 end
 y = y.';
-% velovities
+% velocities
 xd = diff(x);
 yd = diff(y);
 
@@ -114,7 +114,7 @@ for k = 1:n   % external forces and positions where they're applied
     Yc(k) = y(k) - h*cos(sum(phi(1:k)) - pi/2);
     delta(k) = Yc(k) + Diam/2 + h - d; % distance from contact surface
     Fy(k) = epsilon * exp(-delta(k)/epsilon); % global normal contact force
-    Fx(k) = mu*Fy(k)*tanh(10*(v-diff(Xc(k)))); % global friction force
+    Fx(k) = -mu*Fy(k)*tanh(10*(diff(Xc(k))-v)); % global friction force
 end
 % get rid of (t)
 Xc = subs(Xc.', [phi_t; phid_t], [phi; phid]);
