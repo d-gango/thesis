@@ -6,7 +6,7 @@ k = 1;
 b = 1;
 g = 10;
 mu = 0.5;
-v_f = @(t) sin(t);
+v_f = @(t) heaviside(t);
 % initial conditions
 x0 = [0;0];
 T = 15;
