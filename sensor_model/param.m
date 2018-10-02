@@ -5,8 +5,8 @@ par.v = @(t) heaviside(t-1);  % relative velocity of contact surface
 par.d = @(t) 5;  % contact depth
 
 par.force_mode = 0;
-par.F_ext = 2000;
-par.m_surf = 10000;
+par.F_ext = 1000;
+par.m_surf = 100;
 
 par.batch = 0; % set to 1 for batch run
 par.offset = 1; % springs relaxed in equilibrium

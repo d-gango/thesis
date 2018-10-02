@@ -353,7 +353,7 @@ plot(t, par.d(t),'LineWidth', 2)
 xlabel('t [s]')
 ylabel('d [mm]')
 
-% relative velocity
+% surface velocity
 figure
 switch par.force_mode
     case 0
@@ -362,7 +362,7 @@ switch par.force_mode
         plot(t, Y(:,end),'LineWidth', 2)
 end
 xlabel('t [s]')
-ylabel('v [mm/s]')
+ylabel('v_{surf} [mm/s]')
 
 %% sensor shape
 figure
