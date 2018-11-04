@@ -282,23 +282,23 @@ for id = 1:length(t)
     end
     drawnow;
     pause(0.03)
-end
-%
-%     % Get frame as an image
-%     f = getframe(gcf);
-%
-%     % Create a colormap for the first frame. For the rest of the frames,
-%     % use the same colormap
-%     if id == 1
-%         [mov(:,:,1,id), map] = rgb2ind(f.cdata, 256, 'nodither');
-%     else
-%         mov(:,:,1,id) = rgb2ind(f.cdata, map, 'nodither');
-%     end
 % end
 
-%
-% % Create animated GIF
-% imwrite(mov, map, 'animation.gif', 'Delaytime', 0, 'LoopCount', inf)
+    % Get frame as an image
+    f = getframe(gcf);
+
+    % Create a colormap for the first frame. For the rest of the frames,
+    % use the same colormap
+    if id == 1
+        [mov(:,:,1,id), map] = rgb2ind(f.cdata, 256, 'nodither');
+    else
+        mov(:,:,1,id) = rgb2ind(f.cdata, map, 'nodither');
+    end
+end
+
+
+% Create animated GIF
+imwrite(mov, map, 'animation.gif', 'Delaytime', 0, 'LoopCount', inf)
 
 %% calculate forces and friction coeffitient
 Fxval = zeros(length(t),par.n);
