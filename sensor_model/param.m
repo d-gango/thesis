@@ -1,7 +1,7 @@
 function par = param()
 par.n = 10;  % number of segments
 par.epsilon = 0.06; % parameter for contact force approximation
-par.v = @(t) heaviside(t-1);  % relative velocity of contact surface
+par.v = @(t) 1;  % relative velocity of contact surface
 par.d = @(t) 5;  % contact depth
 
 par.force_mode = 0;

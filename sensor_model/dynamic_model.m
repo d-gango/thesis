@@ -114,7 +114,7 @@ for k = 1:n   % external forces and positions where they're applied
     Yc(k) = y(k) - h*cos(sum(phi(1:k)) - pi/2);
     delta(k) = Yc(k) + Diam/2 + h - d; % distance from contact surface
     Fy(k) = epsilon * exp(-delta(k)/epsilon); % global normal contact force
-    Fx(k) = -mu*Fy(k)*tanh(10*(diff(Xc(k))-v)); % global friction force
+    Fx(k) = -mu*Fy(k)*tanh(100*(diff(Xc(k))-v)); % global friction force
 end
 % get rid of (t)
 Xc = subs(Xc.', [phi_t; phid_t], [phi; phid]);
@@ -195,8 +195,8 @@ end
 animateSensor(0,[init(1:n),x(n+1:end)]); title('initial shape');
 % dynamic simulation
 tspan = 0:0.01:5;
-options = odeset('RelTol',1e-6,'AbsTol',1e-8, 'BDF', 'on');
-[t,Y] = ode15s(@eq_of_motion,tspan,init');
+options = odeset('RelTol',1e-10,'AbsTol',1e-12,'InitialStep',1e-20);
+[t,Y] = ode15s(@eq_of_motion,tspan,init',options);
 toc
 %% animation
 % Calculating joint coordinates for animation purposes
@@ -264,7 +264,7 @@ height = pos(4);
 % mov = zeros(height, width, 1, length(t), 'uint8');
 %
 % Loop through by changing XData and yData
-for id = 1:length(t)
+for id = 1:8:length(t)
     % Update graphics data. this is more efficient than recreating plots.
     for j = 1:n
         set(hh1(j), 'XData', t(id), 'yData', ang(id, j))
