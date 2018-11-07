@@ -1,6 +1,5 @@
 function xdot = eq_of_motion(t,x)
-% load symbolic matrices
-load('eq_of_motion_data.mat');
+global Cfun Kfun Mfun Qfun Hfun
 par = param();
 phicell = num2cell(x(1:par.n));
 xcell = num2cell(x(1:2*par.n));
@@ -31,5 +30,5 @@ switch par.force_mode
         xdot = [x(par.n+1:2*par.n); M\(-K + Q + C.'*lambda); x(end); (par.F_ext-Fxsum)/par.m_surf];
 end
 
-disp(t)
+%disp(t)
 end

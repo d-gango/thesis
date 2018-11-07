@@ -1,6 +1,7 @@
 %% equation of motion
-tic
 clear all
+close all
+tic
 par = param(); %get parameters
 n = par.n; % number of segments
 
@@ -114,7 +115,7 @@ for k = 1:n   % external forces and positions where they're applied
     Yc(k) = y(k) - h*cos(sum(phi(1:k)) - pi/2);
     delta(k) = Yc(k) + Diam/2 + h - d; % distance from contact surface
     Fy(k) = epsilon * exp(-delta(k)/epsilon); % global normal contact force
-    Fx(k) = -mu*Fy(k)*tanh(100*(diff(Xc(k))-v)); % global friction force
+    Fx(k) = mu*Fy(k)*tanh(100*(v-diff(Xc(k)))); % global friction force
 end
 % get rid of (t)
 Xc = subs(Xc.', [phi_t; phid_t], [phi; phid]);
@@ -160,6 +161,7 @@ Hsub = subs(H,params,params_num);
 Fxsub = subs(Fx,params,params_num);
 Fysub = subs(Fy,params,params_num);
 
+global Mfun Cfun Kfun Qfun Hfun
 Mfun = matlabFunction(Msub);
 Cfun = matlabFunction(Csub);
 Kfun = matlabFunction(Ksub);
@@ -185,16 +187,18 @@ end
 phi0 = x(1:n);
 toc
 
+%init = [phi0, zeros(1,n)];
 % modify IC
 % phi0(1) = phi0(1)+0.05;
-% init = get_dynamic_IC(phi0);
+init = get_dynamic_IC(phi0);
+
 load init.mat
 if par.force_mode == 1
     init = [init, 0, 0];
 end
 animateSensor(0,[init(1:n),x(n+1:end)]); title('initial shape');
 % dynamic simulation
-tspan = 0:0.01:5;
+tspan = 0:0.001:5;
 options = odeset('RelTol',1e-10,'AbsTol',1e-12,'InitialStep',1e-20);
 [t,Y] = ode15s(@eq_of_motion,tspan,init',options);
 toc
@@ -264,7 +268,7 @@ height = pos(4);
 % mov = zeros(height, width, 1, length(t), 'uint8');
 %
 % Loop through by changing XData and yData
-for id = 1:8:length(t)
+for id = 1:10:length(t)
     % Update graphics data. this is more efficient than recreating plots.
     for j = 1:n
         set(hh1(j), 'XData', t(id), 'yData', ang(id, j))
@@ -282,23 +286,23 @@ for id = 1:8:length(t)
     end
     drawnow;
     pause(0.03)
-% end
-
-    % Get frame as an image
-    f = getframe(gcf);
-
-    % Create a colormap for the first frame. For the rest of the frames,
-    % use the same colormap
-    if id == 1
-        [mov(:,:,1,id), map] = rgb2ind(f.cdata, 256, 'nodither');
-    else
-        mov(:,:,1,id) = rgb2ind(f.cdata, map, 'nodither');
-    end
 end
 
-
-% Create animated GIF
-imwrite(mov, map, 'animation.gif', 'Delaytime', 0, 'LoopCount', inf)
+%     % Get frame as an image
+%     f = getframe(gcf);
+% 
+%     % Create a colormap for the first frame. For the rest of the frames,
+%     % use the same colormap
+%     if id == 1
+%         [mov(:,:,1,id), map] = rgb2ind(f.cdata, 256, 'nodither');
+%     else
+%         mov(:,:,1,id) = rgb2ind(f.cdata, map, 'nodither');
+%     end
+% end
+% 
+% 
+% % % Create animated GIF
+% % imwrite(mov, map, 'animation.gif', 'Delaytime', 0, 'LoopCount', inf)
 
 %% calculate forces and friction coeffitient
 Fxval = zeros(length(t),par.n);
@@ -365,29 +369,29 @@ xlabel('t [s]')
 ylabel('v_{surf} [mm/s]')
 
 %% sensor shape
-figure
-k = find(t == 2.5);
-xplot = [0, x(k,1)];
-yplot = [0, y(k,1)];
-if n > 1
-    for i = 2:n
-        xplot(i,:) = [xplot(i-1,2), x(k,i)];
-        yplot(i,:) = [yplot(i-1,2), y(k,i)];
-    end
-end
-% contact surface
-hh3 = line([-0.5*D_num 1.5*D_num],...
-    [-D_num/2-h_num+d_num(t(k)) -D_num/2-h_num+d_num(t(k))],'LineWidth',1,'Color','k');
-hold on
-% top of sensor
-line([0,D_num], [0,0],'LineWidth',1,'Color','k');
-% segments
-for i = 1:n
-    hh2(i) = plot(xplot(i,:), yplot(i,:), '.-', 'MarkerSize', 20, 'LineWidth', 2, ...
-        'Color', cmap(i,:));
-end
-
-hold off
-axis equal
-axis([-0.5*D_num 1.5*D_num -D_num 0.5*D_num])
-ht = title(sprintf('t = %0.2f s', t(k)),'FontSize',16);
+% figure
+% k = find(t == 2.5);
+% xplot = [0, x(k,1)];
+% yplot = [0, y(k,1)];
+% if n > 1
+%     for i = 2:n
+%         xplot(i,:) = [xplot(i-1,2), x(k,i)];
+%         yplot(i,:) = [yplot(i-1,2), y(k,i)];
+%     end
+% end
+% % contact surface
+% hh3 = line([-0.5*D_num 1.5*D_num],...
+%     [-D_num/2-h_num+d_num(t(k)) -D_num/2-h_num+d_num(t(k))],'LineWidth',1,'Color','k');
+% hold on
+% % top of sensor
+% line([0,D_num], [0,0],'LineWidth',1,'Color','k');
+% % segments
+% for i = 1:n
+%     hh2(i) = plot(xplot(i,:), yplot(i,:), '.-', 'MarkerSize', 20, 'LineWidth', 2, ...
+%         'Color', cmap(i,:));
+% end
+% 
+% hold off
+% axis equal
+% axis([-0.5*D_num 1.5*D_num -D_num 0.5*D_num])
+% ht = title(sprintf('t = %0.2f s', t(k)),'FontSize',16);

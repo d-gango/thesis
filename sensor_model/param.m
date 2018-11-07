@@ -1,5 +1,5 @@
 function par = param()
-par.n = 10;  % number of segments
+par.n = 4;  % number of segments
 par.epsilon = 0.06; % parameter for contact force approximation
 par.v = @(t) 1;  % relative velocity of contact surface
 par.d = @(t) 5;  % contact depth
@@ -17,7 +17,7 @@ par.m = 100/par.n;  % mass of one segment
 par.L = par.D*sin(pi/(2*par.n)); % length of one segment
 par.k = ones(1,par.n+1)*50000; % spring stiffness
 par.k(1) = 2*par.k(1); par.k(end) = par.k(1);
-par.b = ones(1,par.n+1)*1000; % damping coeff.
+par.b = ones(1,par.n+1)*10000; % damping coeff.
 par.b(1) = 2*par.b(1); par.b(end) = par.b(1);
 par.theta = 1/12*par.m*par.L^2; % moment of inertia
 par.h = 0.5;  % length of perpendicular contact part
