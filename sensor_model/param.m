@@ -8,6 +8,15 @@ par.force_mode = 0;
 par.F_ext = 1000;
 par.m_surf = 100;
 
+% rate-and-state constants
+par.a = 0.0349;
+par.bb = 0.0489;
+par.c = 0.001;
+par.mu_star = 0.369;
+par.R = 100;
+par.t_ss = 90;
+par.V_star = 0.001; % mm/s
+
 par.batch = 0; % set to 1 for batch run
 par.offset = 1; % springs relaxed in equilibrium
 

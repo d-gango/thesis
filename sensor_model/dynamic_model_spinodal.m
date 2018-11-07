@@ -108,21 +108,35 @@ C = jacobian(c,phi);
 H = jacobian(C*phid, phi)*phid;
 
 % contact force calculation
-syms h d epsilon v mu
+syms h d epsilon v_surf a bb c mu_star R t_ss V_star
+mu = sym('mu', [n,1]);
+phi_bar = sym('phi_bar', [n,1]);
 for k = 1:n   % external forces and positions where they're applied
     % position of contact point
     Xc(k) = x(k) + h*sin(sum(phi(1:k)) - pi/2);
     Yc(k) = y(k) - h*cos(sum(phi(1:k)) - pi/2);
     delta(k) = Yc(k) + Diam/2 + h - d; % distance from contact surface
     Fy(k) = epsilon * exp(-delta(k)/epsilon); % global normal contact force
-    Fx(k) = mu*Fy(k)*tanh(100*(v-diff(Xc(k)))); % global friction force
+    
+    % friction force
+    v_bar = v_surf - diff(Xc(k));
+    v = v_bar / V_star;
+    mu(k) = a*asinh(v/2*exp((mu_star+bb*log(c+phi_bar(k)))/a));
+    Fx(k) = mu(k)*Fy(k);
+    % evolution of contact surface roughness
+    v = abs(v);
+    phi_bardot(k) = -(1+R*v)/t_ss * sinh((R*v*phi_bar(k)-(1+R-phi_bar(k)))/(1+R*v));
 end
+Vc = diff(Xc);
 % get rid of (t)
 Xc = subs(Xc.', [phi_t; phid_t], [phi; phid]);
 Yc = subs(Yc.', [phi_t; phid_t], [phi; phid]);
 delta = subs(delta.', [phi_t; phid_t], [phi; phid]);
 Fx = subs(Fx.', [phi_t; phid_t], [phi; phid]);
 Fy = subs(Fy.', [phi_t; phid_t], [phi; phid]);
+phi_bardot = subs(phi_bardot.', [phi_t; phid_t], [phi; phid]);
+mu = subs(mu.', [phi_t; phid_t], [phi; phid]);
+Vc = subs(Vc.', [phi_t; phid_t], [phi; phid]);
 
 Q = sym('Q', [n,1]);
 for j = 1:n % generalized forces
@@ -148,10 +162,18 @@ d_num = par.d;
 
 epsilon_num = par.epsilon;
 
-params = [Diam;m;L;kt.';b.';theta;h;mu;epsilon];
+a_num = par.a;
+bb_num = par.bb;
+c_num = par.c;
+mu_star_num = par.mu_star;
+R_num = par.R;
+t_ss_num = par.t_ss;
+V_star_num = par.V_star;
+
+params = [Diam;m;L;kt.';b.';theta;h;epsilon;a;bb;c;mu_star;R;t_ss;V_star];
 params_num = [D_num;m_num;L_num;k_num';b_num';theta_num;...
-    h_num;mu_num;epsilon_num];
-vd_sym = [v;d];
+              h_num;epsilon_num;a_num;bb_num;c_num;...
+              mu_star_num;R_num;t_ss_num;V_star_num];
 
 Msub = subs(M,params,params_num);
 Csub = subs(C,params,params_num);
@@ -160,8 +182,11 @@ Qsub = subs(Q,params,params_num);
 Hsub = subs(H,params,params_num);
 Fxsub = subs(Fx,params,params_num);
 Fysub = subs(Fy,params,params_num);
+phi_bardotsub = subs(phi_bardot,params,params_num);
+musub = subs(mu,params,params_num);
+Vcsub = subs(Vc,params,params_num);
 
-global Mfun Cfun Kfun Qfun Hfun
+global Mfun Cfun Kfun Qfun Hfun phi_bardotfun
 Mfun = matlabFunction(Msub);
 Cfun = matlabFunction(Csub);
 Kfun = matlabFunction(Ksub);
@@ -169,8 +194,10 @@ Qfun = matlabFunction(Qsub);
 Hfun = matlabFunction(Hsub);
 Fxfun = matlabFunction(Fxsub);
 Fyfun = matlabFunction(Fysub);
+phi_bardotfun = matlabFunction(phi_bardotsub);
+mufun = matlabFunction(musub);
+Vcfun = matlabFunction(Vcsub);
 
-save('eq_of_motion_data.mat','Mfun','Cfun','Kfun','Qfun','Hfun','Fxfun');
 toc
 %% solve ODE
 tic
@@ -187,20 +214,17 @@ end
 phi0 = x(1:n);
 toc
 
-init = [phi0, zeros(1,n)];
-% modify IC
-% phi0(1) = phi0(1)+0.05;
-% init = get_dynamic_IC(phi0);
+% init = [phi0, zeros(1,n), 101*ones(1,n)];
+load init_spinodal.mat
 
-load init.mat
 if par.force_mode == 1
     init = [init, 0, 0];
 end
 animateSensor(0,[init(1:n),x(n+1:end)]); title('initial shape');
 % dynamic simulation
-tspan = 0:0.001:5;
+tspan = 0:0.001:10;
 options = odeset('RelTol',1e-10,'AbsTol',1e-12,'InitialStep',1e-20);
-[t,Y] = ode15s(@eq_of_motion,tspan,init',options);
+[t,Y] = ode15s(@eq_of_motion_spinodal,tspan,init',options);
 toc
 %% animation
 % Calculating joint coordinates for animation purposes
@@ -307,18 +331,20 @@ end
 %% calculate forces and friction coeffitient
 Fxval = zeros(length(t),par.n);
 Fyval = zeros(length(t),par.n);
+phival = zeros(length(t),par.n);
+muval = zeros(length(t),par.n);
+Vcval = zeros(length(t),par.n);
 for i = 1:length(t)
-    switch par.force_mode
-        case 0
-            Fxarg = num2cell([par.d(t(i)), Y(i,:), par.v(t(i))]);
-            Fyarg = num2cell([par.d(t(i)), Y(i,1:par.n)]);
-        case 1
-            Fxarg = num2cell([par.d(t(i)), Y(i,1:2*par.n), Y(i,end)]);
-            Fyarg = num2cell([par.d(t(i)), Y(i,1:par.n)]);
-    end
+
+    Fxarg = num2cell([par.d(t(i)), Y(i,:), par.v(t(i))]);
+    Fyarg = num2cell([par.d(t(i)), Y(i,1:par.n)]);
+    muarg = num2cell([Y(i,:), par.v(t(i))]);
+    Vcarg = num2cell([Y(i,1:2*par.n)]);  
     
     Fxval(i,:) = Fxfun(Fxarg{:})';
     Fyval(i,:) = Fyfun(Fyarg{:})';
+    muval(i,:) = mufun(muarg{:})';
+    Vcval(i,:) = Vcfun(Vcarg{:})';
     
     Fxsum(i) = sum(Fxval(i,:));
     Fysum(i) = sum(Fyval(i,:));
@@ -350,6 +376,35 @@ for i = 1:n
 end
 xlabel('t [s]')
 ylabel('relative anglular velocity [rad/s]')
+
+% interface state variable
+figure
+phiv = Y(:,2*n+1:3*n);
+for i = 1:n
+    plot(t, phiv(:,i), 'LineWidth', 2, 'Color', cmap(i,:))
+    hold on
+end
+xlabel('t [s]')
+ylabel('\phi')
+
+% friction coefficient
+figure
+for i = 1:n
+    plot(t, muval(:,i), 'LineWidth', 2, 'Color', cmap(i,:))
+    hold on
+end
+xlabel('t [s]')
+ylabel('\mu')
+
+% horizontal velocity
+figure
+for i = 1:n
+    plot(t, Vcval(:,i), 'LineWidth', 2, 'Color', cmap(i,:))
+    hold on
+end
+xlabel('t [s]')
+ylabel('v_x')
+
 
 % contact depth
 figure
