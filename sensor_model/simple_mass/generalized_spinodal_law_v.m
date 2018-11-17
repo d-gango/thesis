@@ -169,6 +169,7 @@ v = vrel / V_star;
 mu = a*asinh(v/2*exp((mu_star+bb*log(c+phi_bar))/a));
 Ff = mu*Fn;
 % evolution of contact surface roughness
+v = abs(v);
 phi_bardot = -(1+R*v)/t_ss * sinh((R*v*phi_bar-(1+R-phi_bar))/(1+R*v));
 
 Fsum = Fk+Fb+Ff;

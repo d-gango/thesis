@@ -108,7 +108,7 @@ C = jacobian(c,phi);
 H = jacobian(C*phid, phi)*phid;
 
 % contact force calculation
-syms h d epsilon v_surf a bb c mu_star R t_ss V_star
+syms h d epsilon v_surf aa bb cc mu_star R t_ss V_star
 mu = sym('mu', [n,1]);
 phi_bar = sym('phi_bar', [n,1]);
 for k = 1:n   % external forces and positions where they're applied
@@ -121,7 +121,7 @@ for k = 1:n   % external forces and positions where they're applied
     % friction force
     v_bar = v_surf - diff(Xc(k));
     v = v_bar / V_star;
-    mu(k) = a*asinh(v/2*exp((mu_star+bb*log(c+phi_bar(k)))/a));
+    mu(k) = aa*asinh(v/2*exp((mu_star+bb*log(cc+phi_bar(k)))/aa));
     Fx(k) = mu(k)*Fy(k);
     % evolution of contact surface roughness
     v = abs(v);
@@ -162,17 +162,17 @@ d_num = par.d;
 
 epsilon_num = par.epsilon;
 
-a_num = par.a;
+aa_num = par.aa;
 bb_num = par.bb;
-c_num = par.c;
+cc_num = par.cc;
 mu_star_num = par.mu_star;
 R_num = par.R;
 t_ss_num = par.t_ss;
 V_star_num = par.V_star;
 
-params = [Diam;m;L;kt.';b.';theta;h;epsilon;a;bb;c;mu_star;R;t_ss;V_star];
+params = [Diam;m;L;kt.';b.';theta;h;epsilon;aa;bb;cc;mu_star;R;t_ss;V_star];
 params_num = [D_num;m_num;L_num;k_num';b_num';theta_num;...
-              h_num;epsilon_num;a_num;bb_num;c_num;...
+              h_num;epsilon_num;aa_num;bb_num;cc_num;...
               mu_star_num;R_num;t_ss_num;V_star_num];
 
 Msub = subs(M,params,params_num);
@@ -214,16 +214,16 @@ end
 phi0 = x(1:n);
 toc
 
-% init = [phi0, zeros(1,n), 101*ones(1,n)];
-load init_spinodal.mat
+% init = [phi0, zeros(1,n), 0*ones(1,n)];
+load init_spinodal_10.mat
 
 if par.force_mode == 1
-    init = [init, 0, 0];
+    init = [init, 101*ones(1,n)];
 end
 animateSensor(0,[init(1:n),x(n+1:end)]); title('initial shape');
 % dynamic simulation
-tspan = 0:0.001:10;
-options = odeset('RelTol',1e-10,'AbsTol',1e-12,'InitialStep',1e-20);
+tspan = 0:0.001:5;
+options = odeset('RelTol',1e-10,'AbsTol',1e-12,'InitialStep',1e-30);
 [t,Y] = ode15s(@eq_of_motion_spinodal,tspan,init',options);
 toc
 %% animation
@@ -292,7 +292,7 @@ height = pos(4);
 % mov = zeros(height, width, 1, length(t), 'uint8');
 %
 % Loop through by changing XData and yData
-for id = 1:10:length(t)
+for id = 1:100:length(t)
     % Update graphics data. this is more efficient than recreating plots.
     for j = 1:n
         set(hh1(j), 'XData', t(id), 'yData', ang(id, j))
