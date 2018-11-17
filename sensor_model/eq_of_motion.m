@@ -1,5 +1,5 @@
 function xdot = eq_of_motion(t,x)
-global Cfun Kfun Mfun Qfun Hfun
+global Cfun Kfun Mfun Qfun Hfun Fxfun
 par = param();
 phicell = num2cell(x(1:par.n));
 xcell = num2cell(x(1:2*par.n));
@@ -7,8 +7,8 @@ switch par.force_mode % force_mode -> we simulate the surface as a moving body
     case 0
         dxvcell = num2cell([par.d(t), x(1:2*par.n).', par.v(t)]);
     case 1
-        dxvcell = num2cell([par.d(t), x(1:2*par.n).', x(end-1)]);
-        fxcell = num2cell([par.d(t), x(1:2*par.n).', x(end-1)]);
+        dxvcell = num2cell([par.d(t), x(1:2*par.n).', x(end)]);
+        fxcell = num2cell([par.d(t), x(1:2*par.n).', x(end)]);
 end
 % substitute numeric values
 C = Cfun(phicell{:});
@@ -27,7 +27,8 @@ switch par.force_mode
     case 0
         xdot = [x(par.n+1:end); M\(-K + Q + C.'*lambda)];
     case 1
-        xdot = [x(par.n+1:2*par.n); M\(-K + Q + C.'*lambda); x(end); (par.F_ext-Fxsum)/par.m_surf];
+        Fsurf = par.F_ext(t) - Fxsum;
+        xdot = [x(par.n+1:2*par.n); M\(-K + Q + C.'*lambda); x(end); Fsurf/par.m_surf];
 end
 
 %disp(t)

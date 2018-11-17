@@ -172,8 +172,8 @@ V_star_num = par.V_star;
 
 params = [Diam;m;L;kt.';b.';theta;h;epsilon;aa;bb;cc;mu_star;R;t_ss;V_star];
 params_num = [D_num;m_num;L_num;k_num';b_num';theta_num;...
-              h_num;epsilon_num;aa_num;bb_num;cc_num;...
-              mu_star_num;R_num;t_ss_num;V_star_num];
+    h_num;epsilon_num;aa_num;bb_num;cc_num;...
+    mu_star_num;R_num;t_ss_num;V_star_num];
 
 Msub = subs(M,params,params_num);
 Csub = subs(C,params,params_num);
@@ -186,7 +186,7 @@ phi_bardotsub = subs(phi_bardot,params,params_num);
 musub = subs(mu,params,params_num);
 Vcsub = subs(Vc,params,params_num);
 
-global Mfun Cfun Kfun Qfun Hfun phi_bardotfun
+global Mfun Cfun Kfun Qfun Hfun phi_bardotfun Fxfun Fyfun
 Mfun = matlabFunction(Msub);
 Cfun = matlabFunction(Csub);
 Kfun = matlabFunction(Ksub);
@@ -215,10 +215,10 @@ phi0 = x(1:n);
 toc
 
 % init = [phi0, zeros(1,n), 0*ones(1,n)];
-load init_spinodal_10.mat
+load init_spinodal_6.mat
 
 if par.force_mode == 1
-    init = [init, 101*ones(1,n)];
+    init = [init, 0,0];
 end
 animateSensor(0,[init(1:n),x(n+1:end)]); title('initial shape');
 % dynamic simulation
@@ -314,7 +314,7 @@ end
 
 %     % Get frame as an image
 %     f = getframe(gcf);
-% 
+%
 %     % Create a colormap for the first frame. For the rest of the frames,
 %     % use the same colormap
 %     if id == 1
@@ -323,8 +323,8 @@ end
 %         mov(:,:,1,id) = rgb2ind(f.cdata, map, 'nodither');
 %     end
 % end
-% 
-% 
+%
+%
 % % % Create animated GIF
 % % imwrite(mov, map, 'animation.gif', 'Delaytime', 0, 'LoopCount', inf)
 
@@ -335,11 +335,17 @@ phival = zeros(length(t),par.n);
 muval = zeros(length(t),par.n);
 Vcval = zeros(length(t),par.n);
 for i = 1:length(t)
-
-    Fxarg = num2cell([par.d(t(i)), Y(i,:), par.v(t(i))]);
-    Fyarg = num2cell([par.d(t(i)), Y(i,1:par.n)]);
-    muarg = num2cell([Y(i,:), par.v(t(i))]);
-    Vcarg = num2cell([Y(i,1:2*par.n)]);  
+    switch par.force_mode
+        case 0
+            Fxarg = num2cell([par.d(t(i)), Y(i,:), par.v(t(i))]);
+            Fyarg = num2cell([par.d(t(i)), Y(i,1:par.n)]);
+            muarg = num2cell([Y(i,:), par.v(t(i))]);
+        case 1
+            Fxarg = num2cell([par.d(t(i)), Y(i,1:3*n), Y(i,end)]);
+            Fyarg = num2cell([par.d(t(i)), Y(i,1:par.n)]);
+            muarg = num2cell([Y(i,1:3*n), Y(i,end)]);
+    end
+    Vcarg = num2cell([Y(i,1:2*par.n)]);
     
     Fxval(i,:) = Fxfun(Fxarg{:})';
     Fyval(i,:) = Fyfun(Fyarg{:})';
@@ -405,23 +411,27 @@ end
 xlabel('t [s]')
 ylabel('v_x')
 
-
-% contact depth
-figure
-plot(t, par.d(t),'LineWidth', 2)
-xlabel('t [s]')
-ylabel('d [mm]')
-
-% surface velocity
-figure
-switch par.force_mode
-    case 0
-        plot(t, par.v(t),'LineWidth', 2)
-    case 1
-        plot(t, Y(:,end),'LineWidth', 2)
+if par.force_mode == 1
+    % net horizontal force acting on the surface
+    Fnet = -Fxsum.' + par.F_ext(t);
+    figure
+    plot(t, Fnet,'LineWidth', 2)
+    xlabel('t [s]')
+    ylabel('F_{sum} [mN]')
+    
+    
+    % surface position
+    figure
+    plot(t, Y(:,end-1),'LineWidth', 2)
+    xlabel('t [s]')
+    ylabel('x_{surf} [mm]')
+    
+    % surface velocity
+    figure
+    plot(t, Y(:,end),'LineWidth', 2)
+    xlabel('t [s]')
+    ylabel('v_{surf} [mm/s]')
 end
-xlabel('t [s]')
-ylabel('v_{surf} [mm/s]')
 
 %% sensor shape
 % figure
@@ -445,7 +455,7 @@ ylabel('v_{surf} [mm/s]')
 %     hh2(i) = plot(xplot(i,:), yplot(i,:), '.-', 'MarkerSize', 20, 'LineWidth', 2, ...
 %         'Color', cmap(i,:));
 % end
-% 
+%
 % hold off
 % axis equal
 % axis([-0.5*D_num 1.5*D_num -D_num 0.5*D_num])

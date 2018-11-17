@@ -161,7 +161,7 @@ Hsub = subs(H,params,params_num);
 Fxsub = subs(Fx,params,params_num);
 Fysub = subs(Fy,params,params_num);
 
-global Mfun Cfun Kfun Qfun Hfun
+global Mfun Cfun Kfun Qfun Hfun Fxfun
 Mfun = matlabFunction(Msub);
 Cfun = matlabFunction(Csub);
 Kfun = matlabFunction(Ksub);
@@ -187,12 +187,9 @@ end
 phi0 = x(1:n);
 toc
 
-init = [phi0, zeros(1,n)];
-% modify IC
-% phi0(1) = phi0(1)+0.05;
-% init = get_dynamic_IC(phi0);
+% init = [phi0, zeros(1,n)];
+load init_10.mat
 
-load init.mat
 if par.force_mode == 1
     init = [init, 0, 0];
 end
@@ -268,7 +265,7 @@ height = pos(4);
 % mov = zeros(height, width, 1, length(t), 'uint8');
 %
 % Loop through by changing XData and yData
-for id = 1:10:length(t)
+for id = 1:50:length(t)
     % Update graphics data. this is more efficient than recreating plots.
     for j = 1:n
         set(hh1(j), 'XData', t(id), 'yData', ang(id, j))
@@ -330,6 +327,28 @@ figure
 plot(t,Fysum, 'LineWidth', 2);
 xlabel('t [s]'); ylabel('F_n [10^{-3} N]', 'Interpreter',  'tex');
 
+if par.force_mode == 1
+    % net horizontal force acting on the surface
+    Fnet = -Fxsum.' + par.F_ext(t);
+    figure
+    plot(t, Fnet,'LineWidth', 2)
+    xlabel('t [s]')
+    ylabel('F_{sum} [mN]')
+    
+    
+    % surface position
+    figure
+    plot(t, Y(:,end-1),'LineWidth', 2)
+    xlabel('t [s]')
+    ylabel('x_{surf} [mm]')
+    
+    % surface velocity
+    figure
+    plot(t, Y(:,end),'LineWidth', 2)
+    xlabel('t [s]')
+    ylabel('v_{surf} [mm/s]')
+end
+
 %% plots to save
 
 % relative angles
@@ -350,23 +369,6 @@ for i = 1:n
 end
 xlabel('t [s]')
 ylabel('relative anglular velocity [rad/s]')
-
-% contact depth
-figure
-plot(t, par.d(t),'LineWidth', 2)
-xlabel('t [s]')
-ylabel('d [mm]')
-
-% surface velocity
-figure
-switch par.force_mode
-    case 0
-        plot(t, par.v(t),'LineWidth', 2)
-    case 1
-        plot(t, Y(:,end),'LineWidth', 2)
-end
-xlabel('t [s]')
-ylabel('v_{surf} [mm/s]')
 
 %% sensor shape
 % figure

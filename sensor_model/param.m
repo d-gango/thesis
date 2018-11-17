@@ -4,9 +4,9 @@ par.epsilon = 0.06; % parameter for contact force approximation
 par.v = @(t) 1000;  % relative velocity of contact surface [mm/s]
 par.d = @(t) 5;  % contact depth
 
-par.force_mode = 0;
-par.F_ext = 1000;
-par.m_surf = 100;
+par.force_mode = 1;
+par.F_ext = @(t) 1000*t;
+par.m_surf = 0.1;
 
 % rate-and-state constants
 par.aa = 0.0349;
